@@ -661,7 +661,7 @@ function renderHijriBannerV2(d, l) {
         : '';
     const nextHtml = renderNextEventRow(getNextHijriEvent(), d, l, 'hb-next'); // v110
 
-    return '<div class="flex flex-wrap items-center justify-between gap-3 mb-6 px-1">'
+    return '<div class="flex flex-wrap items-center justify-between gap-3 mb-6 px-1 hmx-hb">'
         + '<div class="hb-strip' + (nextHtml ? ' hb-strip--wide' : '') + '" role="group" aria-label="' + (bn ? 'আজকের তারিখ' : "Today's date") + '">'
         +   '<div class="hb-main" style="color:' + mainColor + '"><span aria-hidden="true">🌙</span> ' + hijriStr + '</div>'
         +   '<div class="hb-sub" style="color:' + subColor + '">'
@@ -1106,6 +1106,14 @@ function renderHeader()
                         </button>
                         <div id="more-dropdown" class="hidden absolute right-0 top-full mt-2 w-48 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden"
                             style="background:${d?'rgba(6,20,16,.97)':'rgba(255,255,255,.97)'};backdrop-filter:blur(24px);border:1px solid ${border}">
+                            ${!((typeof isPWAInstalled==='function')?isPWAInstalled():false)?`
+                            <button onclick="const dd=document.getElementById('more-dropdown');if(dd)dd.classList.add('hidden');if(window.triggerPWAInstall)window.triggerPWAInstall();"
+                                class="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-semibold transition-all text-left"
+                                style="color:${d?'#34d399':'#059669'};background:${d?'rgba(5,150,105,.12)':'rgba(5,150,105,.08)'};border-bottom:1px solid ${border};min-height:44px"
+                                aria-label="${l==='bn'?'অ্যাপ ইনস্টল করুন':'Install App'}">
+                                <span style="font-size:1rem" aria-hidden="true">📲</span>
+                                <span>${l==='bn'?'অ্যাপ ইনস্টল':'Install App'}</span>
+                            </button>`:''}
                             ${morePages.map(page=>`
                             <button data-action="changePage" data-param="${page}"
                                 ${state.currentPage===page?'aria-current="page"':''}
@@ -1210,6 +1218,16 @@ function renderMobileMenu()
 
         <!-- Nav items -->
         <nav class="p-3 flex-1 space-y-1" style="overflow-y:auto" aria-label="${l==='bn'?'মেনু নেভিগেশন':'Menu navigation'}">
+            ${!((typeof isPWAInstalled==='function')?isPWAInstalled():false)?`
+            <div class="pb-1.5">
+                <button onclick="const m=document.getElementById('mobile-menu-drawer');if(m)m.classList.remove('open');const b=document.getElementById('mobile-menu-backdrop');if(b)b.classList.add('hidden');state.menuOpen=false;if(window.triggerPWAInstall)window.triggerPWAInstall();"
+                    class="flex items-center gap-3 w-full px-3.5 py-3 rounded-2xl text-sm font-bold transition-all focus:outline-none text-left shadow-sm active:scale-95"
+                    style="min-height:48px;background:linear-gradient(135deg,#059669,#047857);color:#ffffff;box-shadow:0 4px 14px rgba(5,150,105,.35);border:1.5px solid rgba(52,211,153,.35)">
+                    <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:rgba(255,255,255,.2)" aria-hidden="true">📲</span>
+                    <span class="flex-1">${l==='bn'?'অ্যাপ ইনস্টল করুন':'Install App'}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,.22);font-weight:600">${l==='bn'?'অফলাইন':'Offline'}</span>
+                </button>
+            </div>`:''}
             ${allPages.map(page=>{
                 const active = state.currentPage===page;
                 return `
@@ -1427,6 +1445,16 @@ function renderFooter()
                     اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ
                 </p>
                 <div class="justify-center mb-4">${renderHijriAdjustRow('footer', true, l)}</div>
+                ${!((typeof isPWAInstalled==='function')?isPWAInstalled():false)?`
+                <div class="mt-3 mb-3 flex justify-center">
+                    <button onclick="if(window.triggerPWAInstall)window.triggerPWAInstall();"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95"
+                        style="min-height:44px;background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.25)"
+                        aria-label="${l==='bn'?'অ্যাপ ইনস্টল করুন':'Install App'}">
+                        <span aria-hidden="true">📲</span>
+                        <span>${l==='bn'?'অ্যাপ ইনস্টল করুন (অফলাইনেও চলবে)':'Install App (Works Offline)'}</span>
+                    </button>
+                </div>`:''}
                 <p class="text-xs" style="color:rgba(255,255,255,.28)">
                     © ${new Date().getFullYear()} ${l==='bn'?'আহলে বাইত (আ.)':'Ahl al-Bayt (a.s)'}
                     · ${l==='bn'?'সর্বস্বত্ব সংরক্ষিত':'All rights reserved'}
@@ -1635,7 +1663,7 @@ function renderLatestBlogWidget(d, l) {
     return `
     <section aria-labelledby="home-blog-heading" style="margin-bottom:3rem">
         <div class="section-heading reveal">
-            <span style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#0369a1,#075985);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;box-shadow:0 4px 12px rgba(3,105,161,.35)" aria-hidden="true">📝</span>
+            <span style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#0f766e,#115e59);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;box-shadow:0 4px 12px rgba(15,118,110,.35)" aria-hidden="true">📝</span>
             <h2 id="home-blog-heading" class="section-title">${l==='bn'?'সাম্প্রতিক লেখা':'Latest Writings'}</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 reveal">
@@ -1674,7 +1702,7 @@ function renderContinueReadingWidget(d, l) {
     return `
     <section aria-labelledby="home-continue-heading" style="margin-bottom:3rem">
         <div class="section-heading reveal">
-            <span style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,.35)" aria-hidden="true">🔖</span>
+            <span style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#c9a227,#b45309);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;box-shadow:0 4px 12px rgba(180,83,9,.35)" aria-hidden="true">🔖</span>
             <h2 id="home-continue-heading" class="section-title">${l==='bn'?'আপনি যা পড়ছিলেন':'Continue Where You Left Off'}</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 reveal">
@@ -1683,9 +1711,9 @@ function renderContinueReadingWidget(d, l) {
                 return `
                 <button data-action="${meta.action}" data-param="${h.id}"
                     class="text-left w-full" style="display:flex;align-items:center;gap:10px;padding:.85rem 1rem;border-radius:14px;cursor:pointer;
-                    background:${d?'rgba(124,58,237,.1)':'rgba(124,58,237,.06)'};border:1px solid ${d?'rgba(124,58,237,.25)':'rgba(124,58,237,.18)'}">
+                    background:${d?'rgba(5,150,105,.12)':'rgba(5,150,105,.07)'};border:1px solid ${d?'rgba(5,150,105,.28)':'rgba(5,150,105,.2)'}">
                     <span style="font-size:1.15rem;flex-shrink:0" aria-hidden="true">${meta.icon}</span>
-                    <span class="line-clamp-2" style="font-size:12.5px;font-weight:600;color:${d?'#e9d5ff':'#4c1d95'};line-height:1.4">${sanitize(l==='bn'?h.titleBn:h.titleEn)}</span>
+                    <span class="line-clamp-2" style="font-size:12.5px;font-weight:600;color:${d?'#a7f3d0':'#065f46'};line-height:1.4">${sanitize(l==='bn'?h.titleBn:h.titleEn)}</span>
                 </button>`;
             }).join('')}
         </div>
@@ -1739,20 +1767,20 @@ function renderHomePage()
     /* ── Feature cards data — grouped into two subsections ── */
     const featuresLearn=[
         {icon:'👑',title:l==='bn'?'ইমামগণ':'The Imams',       desc:l==='bn'?'১৪ মাসুমিনের জীবনী':'Lives of 14 Masumeen',    page:'imams',   color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
-        {icon:'📝',title:t('blog'),                              desc:l==='bn'?'ইসলামিক প্রবন্ধ':'Islamic writings',            page:'blog',    color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
-        {icon:'📚',title:l==='bn'?'জ্ঞান কেন্দ্র':'Knowledge Center', desc:l==='bn'?'হাদিস, মাসাইল, প্রশ্নোত্তর ও ফতোয়া':'Hadith, Masail, Q&A & Fatwa', page:'knowledgeCenter', color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
-        {icon:'🧠',title:l==='bn'?'কুইজ':'Quiz',               desc:l==='bn'?'জ্ঞান পরীক্ষা':'Test your knowledge',           page:'quiz',    color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
-        {icon:'🔤',title:l==='bn'?'আরবি পড়া শেখা':'Learn Arabic', desc:l==='bn'?'হরফ, চিহ্ন ও অনুশীলন':'Letters, marks & practice', page:'arabic', color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
+        {icon:'📝',title:t('blog'),                              desc:l==='bn'?'ইসলামিক প্রবন্ধ':'Islamic writings',            page:'blog',    color:'#0f766e',bg:'rgba(15,118,110,.1)', faint:'rgba(15,118,110,.25)'},
+        {icon:'📚',title:l==='bn'?'জ্ঞান কেন্দ্র':'Knowledge Center', desc:l==='bn'?'হাদিস, মাসাইল, প্রশ্নোত্তর ও ফতোয়া':'Hadith, Masail, Q&A & Fatwa', page:'knowledgeCenter', color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
+        {icon:'🧠',title:l==='bn'?'কুইজ':'Quiz',               desc:l==='bn'?'জ্ঞান পরীক্ষা':'Test your knowledge',           page:'quiz',    color:'#9f1239',bg:'rgba(159,18,57,.1)', faint:'rgba(159,18,57,.25)'},
+        {icon:'🔤',title:l==='bn'?'আরবি পড়া শেখা':'Learn Arabic', desc:l==='bn'?'হরফ, চিহ্ন ও অনুশীলন':'Letters, marks & practice', page:'arabic', color:'#4d7c0f',bg:'rgba(77,124,15,.1)', faint:'rgba(77,124,15,.25)'},
     ];
     const featuresWorship=[
         {icon:'🤲',title:l==='bn'?'দোয়া ও যিয়ারত':'Dua & Ziyarat',desc:l==='bn'?'দোয়া সংকলন':'Supplications',              page:'dua',     color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'🗂️',title:l==='bn'?'আমার তালিকা':'My Lists',     desc:l==='bn'?'নিজের দোয়া-ক্রম':'Your own dua order', page:'playlists', color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'📿',title:l==='bn'?'তাসবিহ':'Tasbeeh',          desc:l==='bn'?'ডিজিটাল তাসবিহ':'Digital counter',             page:'tasbeeh', color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'☀️',title:l==='bn'?'৯৯ নাম':'99 Names',         desc:l==='bn'?'আসমাউল হুসনা':'Names of Allah',               page:'asmaul',  color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'🧭',title:l==='bn'?'কিবলা':'Qibla',             desc:l==='bn'?'কিবলার দিক':'Qibla direction',                 page:'qibla',   color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
+        {icon:'🗂️',title:l==='bn'?'আমার তালিকা':'My Lists',     desc:l==='bn'?'নিজের দোয়া-ক্রম':'Your own dua order', page:'playlists', color:'#0f766e',bg:'rgba(15,118,110,.1)', faint:'rgba(15,118,110,.25)'},
+        {icon:'📿',title:l==='bn'?'তাসবিহ':'Tasbeeh',          desc:l==='bn'?'ডিজিটাল তাসবিহ':'Digital counter',             page:'tasbeeh', color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
+        {icon:'☀️',title:l==='bn'?'৯৯ নাম':'99 Names',         desc:l==='bn'?'আসমাউল হুসনা':'Names of Allah',               page:'asmaul',  color:'#9f1239',bg:'rgba(159,18,57,.1)', faint:'rgba(159,18,57,.25)'},
+        {icon:'🧭',title:l==='bn'?'কিবলা':'Qibla',             desc:l==='bn'?'কিবলার দিক':'Qibla direction',                 page:'qibla',   color:'#4d7c0f',bg:'rgba(77,124,15,.1)', faint:'rgba(77,124,15,.25)'},
         {icon:'🌙',title:l==='bn'?'রমজান':'Ramadan',          desc:l==='bn'?'রোজা, সাহরি ও ইফতার':'Fasting, Sehri & Iftar',  page:'ramadan', color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'🧮',title:l==='bn'?'খুমুস ও যাকাত':'Khums & Zakat', desc:l==='bn'?'হিসাব ক্যালকুলেটর':'Calculator',              page:'khumsZakat', color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
-        {icon:'🗺️',title:l==='bn'?'বিশ্ব মানচিত্র':'World Map', desc:l==='bn'?'পবিত্র স্থানসমূহ':'Holy sites',              page:'worldMap',color:'#b45309',bg:'rgba(180,83,9,.1)', faint:'rgba(180,83,9,.25)'},
+        {icon:'🧮',title:l==='bn'?'খুমুস ও যাকাত':'Khums & Zakat', desc:l==='bn'?'হিসাব ক্যালকুলেটর':'Calculator',              page:'khumsZakat', color:'#0f766e',bg:'rgba(15,118,110,.1)', faint:'rgba(15,118,110,.25)'},
+        {icon:'🗺️',title:l==='bn'?'বিশ্ব মানচিত্র':'World Map', desc:l==='bn'?'পবিত্র স্থানসমূহ':'Holy sites',              page:'worldMap',color:'#059669',bg:'rgba(5,150,105,.1)', faint:'rgba(5,150,105,.25)'},
     ];
     const renderFeatureCard=(f,fi)=>`
         <button data-action="changePage" data-param="${f.page}"
@@ -1760,7 +1788,7 @@ function renderHomePage()
             style="box-shadow:var(--app-shadow-sm);--fc-accent:${f.color};--fc-accent-bg:${f.bg};--fc-accent-faint:${f.faint}">
             <span class="feature-card-badge">${f.title}</span>
             <div class="feature-card-content">
-                <div class="feature-icon-wrap" style="background:${f.bg};border-color:${f.faint}" aria-hidden="true">${f.icon}</div>
+                <div class="feature-icon-wrap" style="background:${f.bg};border-color:${f.faint}" aria-hidden="true">${hmxIcon(f.page,f.icon)}</div>
                 <h3 class="font-bold text-sm mb-1" style="color:${d?'#f9fafb':'#111827'}">${f.title}</h3>
                 <p class="text-xs leading-relaxed" style="color:${d?'#9ca3af':'#6b7280'}">${f.desc}</p>
                 <div class="feature-card-link">
@@ -1817,10 +1845,11 @@ function renderHomePage()
             </div>
             ${npNote ? `<p id="next-prayer-note-home" class="np-note" role="status">${npNote}</p>` : ''}
         </div>
+        ${hmxPrayerStrip(d,l)}
     </div>
 
     <!-- ③ HERO SECTION -->
-    <div class="${d?'hero-luxury':'hero-luxury-light'} rounded-3xl mb-12 relative page-enter overflow-hidden"
+    <div class="${d?'hero-luxury':'hero-luxury-light'} rounded-3xl mb-12 relative page-enter overflow-hidden hmx-hero"
         style="min-height:440px;display:flex;align-items:center;justify-content:center;padding:56px 24px;color:${d?'white':'inherit'}">
 
         <!-- Geo grid (Step 1 — Hero Pattern Refinement: merged the redundant
@@ -1880,7 +1909,7 @@ function renderHomePage()
             <p class="hero-arabic-sub">آلُ بَيْتِ النَّبِيِّ ﷺ</p>
 
             <!-- Main heading -->
-            <h1 style="font-size:clamp(2rem,6vw,3.4rem);font-weight:900;line-height:1.15;margin-bottom:.65rem;
+            <h1 class="hmx-hero-title" style="font-size:clamp(2rem,6vw,3.4rem);font-weight:900;line-height:1.15;margin-bottom:.65rem;
                 color:${d?'#fff':'#022c22'};font-family:'Amiri',serif;
                 ${d?'text-shadow:0 4px 24px rgba(0,0,0,.3)':''}">
                 ${l==='bn'?'আহলে বাইত (আ.)':'Ahl al-Bayt (a.s)'}
@@ -1898,7 +1927,7 @@ function renderHomePage()
                  against this hero's pale gradient — under the 4.5:1 AA floor for
                  this text size. Bumped to .70 (same #022c22 green, no new color)
                  for ~5.3:1. Dark-mode alpha (.78, already high contrast) unchanged. -->
-            <p style="font-size:clamp(.88rem,2.5vw,1.05rem);line-height:1.75;margin-bottom:2rem;
+            <p class="hmx-hero-tag" style="font-size:clamp(.88rem,2.5vw,1.05rem);line-height:1.75;margin-bottom:2rem;
                 color:${d?'rgba(255,255,255,.78)':'rgba(2,44,34,.70)'};
                 max-width:480px;margin-left:auto;margin-right:auto">
                 ${l==='bn'
@@ -1924,6 +1953,10 @@ function renderHomePage()
             </div>
         </div>
     </div>
+
+    <!-- v263: quick-access row (phones only, CSS-gated) -->
+    ${hmxQuickAccess(d,l)}
+    ${hmxNamesStrip(d,l)}
 
     <!-- ④ MAIN CONTENT + SIDEBAR LAYOUT -->
     <div class="home-layout-grid">
@@ -2013,10 +2046,10 @@ function renderHomePage()
                         <button data-action="hadithPrev" class="${d?'bg-purple-900 text-purple-200 hover:bg-purple-800':'bg-purple-100 text-purple-700 hover:bg-purple-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">‹ ${l==='bn'?'আগে':'Prev'}</button>
                         <button data-action="hadithNext" class="${d?'bg-purple-900 text-purple-200 hover:bg-purple-800':'bg-purple-100 text-purple-700 hover:bg-purple-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">${l==='bn'?'পরে':'Next'} ›</button>
                     </div>
-                    <button data-action="shareHadith" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
+                    <div class="flex gap-1"><button type="button" data-sc-act="hadith" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5" aria-label="${l==='bn'?'ছবি-কার্ড বানান':'Make a picture card'}"><span aria-hidden="true">🖼️</span> ${l==='bn'?'কার্ড':'Card'}</button><button data-action="shareHadith" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                         ${l==='bn'?'শেয়ার':'Share'}
-                    </button>
+                    </button></div>
                 </div>
             </div>
 
@@ -2035,17 +2068,17 @@ function renderHomePage()
                         <button data-action="ayahPrev" class="${d?'bg-amber-900 text-amber-200 hover:bg-amber-800':'bg-amber-100 text-amber-700 hover:bg-amber-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">‹ ${l==='bn'?'আগে':'Prev'}</button>
                         <button data-action="ayahNext" class="${d?'bg-amber-900 text-amber-200 hover:bg-amber-800':'bg-amber-100 text-amber-700 hover:bg-amber-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">${l==='bn'?'পরে':'Next'} ›</button>
                     </div>
-                    <button data-action="shareAyah" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
+                    <div class="flex gap-1"><button type="button" data-sc-act="ayah" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5" aria-label="${l==='bn'?'ছবি-কার্ড বানান':'Make a picture card'}"><span aria-hidden="true">🖼️</span> ${l==='bn'?'কার্ড':'Card'}</button><button data-action="shareAyah" class="${d?'bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'} text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                         ${l==='bn'?'শেয়ার':'Share'}
-                    </button>
+                    </button></div>
                 </div>
             </div>
 
             <!-- Follow Us -->
             <div class="card-luxury ${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border p-5 reveal" style="box-shadow:var(--app-shadow-sm)">
                 <h3 class="text-sm font-bold mb-4 flex items-center gap-2">
-                    <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#1d4ed8,#1e40af);display:flex;align-items:center;justify-content:center;font-size:.8rem" aria-hidden="true">🌐</span>
+                    <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#0f766e,#115e59);display:flex;align-items:center;justify-content:center;font-size:.8rem" aria-hidden="true">🌐</span>
                     ${l==='bn'?'আমাদের অনুসরণ করুন':'Follow Us'}
                 </h3>
                 <div class="space-y-2">
@@ -2331,3 +2364,143 @@ document.addEventListener('click', function (e) {
         b.setAttribute('aria-pressed', String(b.getAttribute('data-dzx-view-btn') === v));
     });
 });
+
+
+// ============================================================================
+// v263 — HOME (phones): quick-access row + 5-prayer strip inside the next-prayer banner
+// ----------------------------------------------------------------------------
+// Purely additive. Both blocks are CSS-gated (hmx- block at the end of style.css):
+// the quick-access row shows only <=767px, the prayer strip only <1024px
+// (the desktop sidebar already lists all five prayers). Nothing here renames or
+// alters an existing function; the 1-second countdown (startNextPrayerCountdown)
+// is untouched — the strip has its own light 15 s tick.
+// ============================================================================
+function hmxQuickAccess(d, l) {
+    const bn = l === 'bn';
+    const items = [
+        ['dua',      '🤲', bn ? 'দোয়া'      : 'Dua',      '#059669'],
+        ['tasbeeh',  '📿', bn ? 'তাসবিহ'    : 'Tasbeeh',  '#b45309'],
+        ['qibla',    '🧭', bn ? 'কিবলা'     : 'Qibla',    '#9f1239'],
+        ['calendar', '📅', bn ? 'ক্যালেন্ডার' : 'Calendar', '#4d7c0f'],
+        ['imams',    '👑', bn ? 'ইমামগণ'    : 'Imams',    '#0f766e'],
+        ['knowledgeCenter', '📚', bn ? 'জ্ঞান কেন্দ্র' : 'Knowledge', '#1d4ed8'],
+        ['ramadan',  '🌙', bn ? 'রমজান'     : 'Ramadan',  '#7c3aed'],
+        ['quiz',     '🧠', bn ? 'কুইজ'      : 'Quiz',     '#b45309'],
+    ];
+    return '<nav class="hmx-quick" aria-label="' + (bn ? 'দ্রুত অ্যাক্সেস' : 'Quick access') + '">'
+        + items.map(function (it) {
+            return '<button type="button" data-action="changePage" data-param="' + it[0] + '" class="hmx-q-item" style="--hq:' + it[3] + '">'
+                + '<span class="hmx-q-ic" aria-hidden="true">' + hmxIcon(it[0], it[1]) + '</span>'
+                + '<span class="hmx-q-lb">' + it[2] + '</span></button>';
+        }).join('')
+        + '</nav>';
+}
+
+// Today's five prayer times -> which one is next + how far we are between the previous and the next.
+function hmxPrayerStripData() {
+    const keys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+    const now = new Date();
+    const T = {};
+    for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        try {
+            const parts = String(state.prayerTimes[k]).split(' ');
+            let hm = parts[0].split(':').map(Number);
+            let h = hm[0], m = hm[1];
+            if (isNaN(h) || isNaN(m)) return null;
+            if (parts[1] === 'PM' && h !== 12) h += 12;
+            if (parts[1] === 'AM' && h === 12) h = 0;
+            const dt = new Date(now); dt.setHours(h, m, 0, 0);
+            T[k] = { date: dt, h12: (hm[0] % 12) || 12, mm: String(m).padStart(2, '0') };
+        } catch (e) { return null; }
+    }
+    let nextKey = null, prev = null, next = null;
+    for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        if (T[k].date > now) { nextKey = k; next = T[k].date; break; }
+        prev = T[k].date;
+    }
+    if (!nextKey) { nextKey = 'fajr'; next = new Date(T.fajr.date.getTime() + 86400000); prev = T.isha.date; }
+    else if (!prev) { prev = new Date(T.isha.date.getTime() - 86400000); }
+    let pct = (next - prev) > 0 ? ((now - prev) / (next - prev)) * 100 : 0;
+    pct = Math.max(0, Math.min(100, Math.round(pct * 10) / 10));
+    return { keys: keys, T: T, nextKey: nextKey, pct: pct };
+}
+
+function hmxPrayerStrip(d, l) {
+    const s = hmxPrayerStripData();   // shows whenever the five times parse (the banner itself also counts down from default times when the fetch failed)
+    if (!s) return '';
+    const bn = l === 'bn';
+    const cells = s.keys.map(function (k) {
+        const tm = s.T[k].h12 + ':' + s.T[k].mm;
+        return '<div class="hmx-ps-i' + (k === s.nextKey ? ' is-next' : '') + '" data-k="' + k + '"><span>' + t(k) + '</span><b>' + (bn ? toBengaliDigits(tm) : tm) + '</b></div>';
+    }).join('');
+    return '<div class="hmx-ps" id="hmx-ps"><div class="hmx-ps-bar" aria-hidden="true"><i id="hmx-ps-fill" style="width:' + s.pct + '%"></i></div><div class="hmx-ps-row">' + cells + '</div></div>';
+}
+
+function hmxPrayerStripTick() {
+    try {
+        const el = document.getElementById('hmx-ps');
+        if (!el) return;
+        const s = hmxPrayerStripData();
+        if (!s) return;
+        const f = document.getElementById('hmx-ps-fill');
+        if (f) f.style.width = s.pct + '%';
+        el.querySelectorAll('.hmx-ps-i').forEach(function (n) { n.classList.toggle('is-next', n.getAttribute('data-k') === s.nextKey); });
+    } catch (e) { /* never let a cosmetic tick throw */ }
+}
+if (!window._hmxPsTimer) { window._hmxPsTimer = setInterval(hmxPrayerStripTick, 15000); }
+
+
+// ============================================================================
+// v266 — own SVG icon set (replaces emoji on the home feature cards + quick-access row)
+// and the 14 Masumeen name strip. Additive: unknown keys fall back to the old emoji.
+// ============================================================================
+const HMX_ICONS = {
+    imams:   '<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5z"/><path d="M5 21h14"/>',
+    blog:    '<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19z"/><path d="M14 7l3 3"/>',
+    knowledgeCenter: '<path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5z"/><path d="M20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/>',
+    quiz:    '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.6a2.6 2.6 0 114.2 2.1c-.9.6-1.7 1.1-1.7 2.3"/><circle cx="12" cy="17" r=".7" fill="currentColor"/>',
+    arabic:  '<text x="12" y="19.5" text-anchor="middle" font-size="24" font-family="Amiri,serif" fill="currentColor" stroke="none">\u0639</text>',
+    dua:     '<path d="M3 11c3.2 0 5.2 1.6 6.6 3.6L12 18l2.4-3.4C15.8 12.6 17.8 11 21 11"/><path d="M3 11c0 5 3.5 9 9 9s9-4 9-9"/><path d="M12 3v3M10.5 4.5h3"/>',
+    playlists: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+    tasbeeh: '<circle cx="12" cy="4.8" r="1.8"/><circle cx="18" cy="8" r="1.8"/><circle cx="19" cy="14.5" r="1.8"/><circle cx="14.5" cy="19.5" r="1.8"/><circle cx="8" cy="19" r="1.8"/><circle cx="4.6" cy="13.2" r="1.8"/><circle cx="6" cy="7.2" r="1.8"/>',
+    asmaul:  '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    qibla:   '<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/>',
+    ramadan: '<path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z"/><path d="M17 3.8l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/>',
+    khumsZakat: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01" stroke-width="2.2"/>',
+    worldMap: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'
+};
+function hmxIcon(key, fallback) {
+    const g = HMX_ICONS[key];
+    if (!g) return fallback || '';
+    return '<svg class="hmx-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + g + '</svg>';
+}
+
+// 14 Masumeen name strip: the Arabic names are read from data/ahlul-bayt/masumeen.json (nothing typed here).
+// If the file cannot be read the strip simply stays hidden.
+window._hmxNames = window._hmxNames || null;
+function hmxNamesMarkup(list) {
+    const one = list.map(function (n) {
+        return '<button type="button" class="hmx-nm" data-action="changePage" data-param="imams" lang="ar" dir="rtl">' + sanitize(n) + '</button>';
+    }).join('<span class="hmx-nm-dot" aria-hidden="true">\u2726</span>');
+    return '<div class="hmx-names-track">' + one + '<span class="hmx-nm-dot" aria-hidden="true">\u2726</span>' + one + '</div>';
+}
+function hmxNamesStrip(d, l) {
+    const bn = l === 'bn';
+    const label = bn ? '১৪ মাসুমের নাম' : 'The names of the Fourteen Infallibles';
+    const inner = window._hmxNames ? hmxNamesMarkup(window._hmxNames) : '';
+    if (!window._hmxNames && !window._hmxNamesLoading) {
+        window._hmxNamesLoading = true;
+        fetch('data/ahlul-bayt/masumeen.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+            if (!j) return;
+            const all = [].concat(j.masumeen || [], j.imams || []).map(function (x) { return x && x.arabicName; }).filter(Boolean);
+            if (all.length < 2) return;
+            window._hmxNames = all;
+            const el = document.getElementById('hmx-names');
+            if (el) { el.innerHTML = hmxNamesMarkup(all); el.hidden = false; }
+        }).catch(function () {}).then(function () { window._hmxNamesLoading = false; });
+    }
+    return '<div class="hmx-names" id="hmx-names" role="region" aria-label="' + label + '"' + (inner ? '' : ' hidden') + '>' + inner + '</div>';
+}

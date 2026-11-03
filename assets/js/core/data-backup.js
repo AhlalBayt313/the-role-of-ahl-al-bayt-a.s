@@ -56,6 +56,9 @@ const AB_GROUPS = [
     { id: 'ramadan', ic: '\U0001f319', def: true,
       bn: 'রমজান ট্র্যাকার', en: 'Ramadan tracker',
       dbn: 'রোজার হিসাব (কোন দিন রোজা রাখা হয়েছে) শবে কদরের রাতের ধাপের অগ্রগতি ও রমজানের জার্নাল (ব্যক্তিগত লেখা)', den: 'Fasting days kept this Ramadan, Qadr-night step progress and the Ramadan journal (personal text)' },
+    { id: 'muharram', ic: '🌙', def: true,
+      bn: 'মুহাররম ট্র্যাকার', en: 'Muharram tracker',
+      dbn: 'কোন দিনের মজলিসে অংশ নেওয়া হয়েছে (ব্যক্তিগত)', den: 'Which days you marked as attended a majlis (personal)' },
     { id: 'personal', ic: '🗂️', def: true,
       bn: 'আমার দোয়া-তালিকা, আরবি শেখা ও রিডার সেটিং', en: 'My dua lists, Arabic practice & reader settings',
       dbn: 'নিজের বানানো তালিকা, আরবি শেখার অগ্রগতি, রিডার মোডের পছন্দ', den: 'Your own lists, Arabic-corner progress and reader-mode choices' },
@@ -104,6 +107,8 @@ const AB_SPEC = {
     'ahlbayt_ramadan_journal':    { g: 'ramadan', t: 'obj' },
     'ahlbayt_qaza_fidya':         { g: 'ramadan', t: 'obj' },
     'ahlbayt_ramadan_hist':       { g: 'ramadan', t: 'obj' },
+    'ahlbayt_muharram':           { g: 'muharram', t: 'obj' },
+    'ahlbayt_sharecard_theme':    { g: 'prefs', t: 'str' },
     'ahlbayt_khums_zakat':        { g: 'finance', t: 'obj' },
 
     'ahlbayt_dua_playlists':      { g: 'personal', t: 'obj', merge: 'playlists' },

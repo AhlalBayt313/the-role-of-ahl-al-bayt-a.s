@@ -277,6 +277,7 @@ function dzxDuaCatFilters(l) {
         {key:'all',     icon:'✦', label:l==='bn'?'সকল দোয়া':'All Duas',   color:'#059669', bg:'rgba(5,150,105,.15)'},
         {key:'morning', icon:'🌅', label:l==='bn'?'সকাল':'Morning',         color:'#0ea5e9', bg:'rgba(14,165,233,.15)'},
         {key:'night',   icon:'🌙', label:l==='bn'?'রাত':'Night',             color:'#8b5cf6', bg:'rgba(139,92,246,.15)'},
+        {key:'takibat', icon:'🤲', label:l==='bn'?'তাকিবাত':'Takibat',       color:'#a21caf', bg:'rgba(162,28,175,.15)'},
         {key:'hardship',icon:'⚠️', label:l==='bn'?'বিপদে':'Hardship',       color:'#ef4444', bg:'rgba(239,68,68,.15)'},
         {key:'gratitude',icon:'🙏',label:l==='bn'?'কৃতজ্ঞতা':'Gratitude',  color:'#10b981', bg:'rgba(16,185,129,.15)'},
         {key:'daily',    icon:'🕐', label:l==='bn'?'দৈনন্দিন':'Daily Life',   color:'#6366f1', bg:'rgba(99,102,241,.15)'},
@@ -504,7 +505,7 @@ function renderDuaPage() {
     const allDuas    = [...state.customDuas,...duas];
     const allZiyarat = [...ziyarats,...state.customZiyarat];
     const filteredDuas = allDuas
-        .filter(dua => selectedCategory==='all'   || dua.category===selectedCategory)
+        .filter(dua => selectedCategory==='all'   || dua.category===selectedCategory || (dua.alsoCategories||[]).indexOf(selectedCategory)>-1)
         .filter(dua => selectedCollection==='all' || getDuaCollection(dua)===selectedCollection);
 
     const catFilters = dzxDuaCatFilters(l);
@@ -784,7 +785,7 @@ function renderDuaResultsInner() {
     const allDuas = [...state.customDuas,...duas];
     const catFilters = dzxDuaCatFilters(l);
     const filteredDuas = allDuas
-        .filter(dua => selectedCategory==='all'   || dua.category===selectedCategory)
+        .filter(dua => selectedCategory==='all'   || dua.category===selectedCategory || (dua.alsoCategories||[]).indexOf(selectedCategory)>-1)
         .filter(dua => selectedCollection==='all' || getDuaCollection(dua)===selectedCollection)
         .filter(dua => dzxMatchesSearch(dua, searchQ));
     return `
@@ -1227,6 +1228,84 @@ function calMonthEventsHtml(month, year, l, d, selDay) {
 }
 
 // ============================================================================
+// v254: calendar page layout helpers — "today" card (beside the month grid on wide screens) and the
+// "occasions of the year" grid. They only re-arrange data the app already has (hijriEvents,
+// CAL_EVENT_LINKS, the ±1 moon-sighting adjustment); no dates or texts are changed here.
+// ============================================================================
+function calTodayCardHtml(d, l, todayH) {
+    try {
+        const bn = l === 'bn';
+        const num = n => bn ? toBengaliDigits(n) : String(n);
+        const g = hijriToGregorian(todayH.day, todayH.month, todayH.year);
+        const wd = (bn ? _calWeekdaysBn : _calWeekdaysEn)[g.getDay()];
+        const gM = bn ? _hbGregMonthsBn : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const mName = bn ? hijriMonthsBn[todayH.month - 1] : hijriMonthsEn[todayH.month - 1];
+        const bd = getBanglaDateFull(g);
+        const key = todayH.month + '-' + todayH.day;
+        const ev = hijriEvents[key];
+        const strong = d ? '#f3f4f6' : '#111827', muted = d ? '#cbd5e1' : '#475569', gold = d ? '#fbbf24' : '#b45309';
+        const line = d ? '#374151' : '#e2e8f0';
+        let h = '<div class="cal-today-card ' + (d ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200') + ' border rounded-2xl reveal" style="box-shadow:0 4px 24px rgba(0,0,0,.08)">'
+            + '<div class="cal-today-top">'
+            +   '<div class="cal-t-wd" style="color:' + gold + '">' + sanitize(wd) + '</div>'
+            +   '<div class="cal-t-num" style="color:' + strong + '">' + num(todayH.day) + '</div>'
+            +   '<div class="cal-t-my" style="color:' + strong + '">' + sanitize(mName) + ' ' + num(todayH.year) + ' ' + (bn ? 'হিজরি' : 'AH') + '</div>'
+            +   '<div class="cal-t-dt" style="color:' + muted + '">'
+            +     '<div>' + num(g.getDate()) + ' ' + gM[g.getMonth()] + ' ' + num(g.getFullYear()) + '</div>'
+            +     '<div>' + sanitize(bn ? bd.strFull : (bd.day + ' ' + _hbBanglaMonthsEn[bd.month] + ' ' + bd.year + ' BS')) + '</div></div>'
+            + '</div>'
+            + '<div style="margin:12px 0;border-top:1px solid ' + line + '"></div>';
+        if (ev) {
+            const tone = hijriEventTone(ev.type, d);
+            h += '<div style="text-align:left;padding:8px 12px;border-radius:12px;border-left:4px solid ' + tone.dot + ';background:' + tone.bg + '">'
+                + '<div style="font-size:.75rem;font-weight:700;color:' + muted + '">' + (bn ? 'আজকের উপলক্ষ' : 'Occasion today') + '</div>'
+                + '<div style="font-size:.9rem;font-weight:700;line-height:1.45;color:' + strong + ';margin-top:2px">' + sanitize(bn ? ev.bn : ev.en) + '</div></div>';
+            if (typeof calEventLinksHtml === 'function') { try { h += '<div style="text-align:left">' + calEventLinksHtml(key, l, d) + '</div>'; } catch (e) { /* skip links */ } }
+        } else {
+            h += '<div style="font-size:.85rem;color:' + muted + '">' + (bn ? 'আজ কোনো বিশেষ উপলক্ষ নেই' : 'No special occasion today') + '</div>';
+        }
+        if (typeof renderHijriAdjustRow === 'function') h += '<div style="margin-top:14px;text-align:left">' + renderHijriAdjustRow('menu', d, l) + '</div>';
+        return h + '</div>';
+    } catch (e) { return ''; }
+}
+
+// Event name for the year grid: first part of the title, joined with the second part when the first is very short
+// (e.g. "আশুরা — ইমাম হোসাইন (আ.)-এর শাহাদাত দিবস"); emoji removed. Same data as hijriEvents.
+function calYearEventName(ev, l) {
+    const parts = String(l === 'bn' ? ev.bn : ev.en).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim().split(' — ');
+    return (parts.length > 1 && parts[0].length < 16) ? parts[0] + ' — ' + parts[1] : parts[0];
+}
+function calYearOccasionsHtml(year, d, l) {
+    try {
+        const bn = l === 'bn';
+        const num = n => bn ? toBengaliDigits(n) : String(n);
+        const strong = d ? '#f3f4f6' : '#111827', muted = d ? '#9ca3af' : '#64748b', gold = d ? '#fbbf24' : '#b45309';
+        const line = d ? '#374151' : '#e2e8f0';
+        const byMonth = {};
+        Object.keys(hijriEvents).forEach(k => { const a = k.split('-').map(Number); (byMonth[a[0]] = byMonth[a[0]] || []).push(a[1]); });
+        let blocks = '';
+        for (let m = 1; m <= 12; m++) {
+            const days = (byMonth[m] || []).sort((a, b) => a - b);
+            blocks += '<section aria-label="' + sanitize(bn ? hijriMonthsBn[m - 1] : hijriMonthsEn[m - 1]) + '">'
+                + '<h3 style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:' + gold + ';margin-bottom:4px">' + sanitize(bn ? hijriMonthsBn[m - 1] : hijriMonthsEn[m - 1]) + '</h3>'
+                + (days.length ? days.map(day => {
+                    const ev = hijriEvents[m + '-' + day];
+                    const tone = hijriEventTone(ev.type, d);
+                    return '<button type="button" class="cal-yrow" style="--cal-y-bd:' + line + ';color:' + strong + '"'
+                        + ' onclick="calOpenEvent(\'' + m + '-' + year + '-' + day + '\');setTimeout(function(){var e=document.getElementById(\'cal-detail\');if(e&&e.scrollIntoView)e.scrollIntoView({block:\'center\'});},80)">'
+                        + '<span class="cal-ydot" style="background:' + tone.dot + '" aria-hidden="true"></span>'
+                        + '<span class="cal-yday" style="color:' + muted + '">' + num(day) + '</span>'
+                        + '<span class="cal-yname">' + sanitize(calYearEventName(ev, l)) + '</span></button>';
+                }).join('') : '<div style="padding:8px 6px;border-top:1px solid ' + line + ';font-size:13px;color:' + muted + '">—</div>')
+                + '</section>';
+        }
+        return '<section class="reveal" aria-labelledby="cal-year-h" style="margin-top:8px">'
+            + '<h2 id="cal-year-h" class="text-2xl font-bold" style="margin-bottom:12px">' + (bn ? '🗓️ বছরের উপলক্ষ' : '🗓️ Occasions of the year') + '</h2>'
+            + '<div class="cal-year-grid">' + blocks + '</div></section>';
+    } catch (e) { return ''; }
+}
+
+// ============================================================================
 // PAGE: CALENDAR
 // ============================================================================
 function renderCalendarPage() {
@@ -1279,8 +1358,12 @@ function renderCalendarPage() {
         return _num(bf.day)+' '+nm(bf.month)+' – '+_num(bl.day)+' '+nm(bl.month)+' '+_num(bl.year);
     })();
 
+    // v254: week starts on Saturday (set CAL_WEEK_START to 0 for Sunday-first). startDay / colIdx below stay true
+    // weekday indexes (0=Sun … 6=Sat), so the Friday/Saturday colours are unaffected; only the layout is shifted.
+    const CAL_WEEK_START = 6;
+    const weekOrder = [0,1,2,3,4,5,6].map(i => (CAL_WEEK_START + i) % 7);
     let cells=[];
-    for(let i=0;i<startDay;i++) cells.push(null);
+    for(let i=0;i<(startDay-CAL_WEEK_START+7)%7;i++) cells.push(null);
     for(let i=1;i<=totalDays;i++) cells.push(i);
 
     // Color scheme (like the photo):
@@ -1293,7 +1376,14 @@ function renderCalendarPage() {
 
     return `
     <div class="space-y-6">
-        <h1 class="text-3xl font-bold reveal">📅 ${t('calendar')}</h1>
+        <header class="reveal">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${d?'#fbbf24':'#b45309'}">${l==='bn'?'হিজরি ক্যালেন্ডার':'Hijri calendar'}</div>
+            <h1 class="text-3xl font-bold" style="margin-top:2px">📅 ${t('calendar')}</h1>
+            <p class="text-sm ${d?'text-gray-300':'text-gray-600'}" style="margin-top:6px;max-width:46rem;line-height:1.6">${l==='bn'?'হিজরি তারিখ স্থানীয় চাঁদ দেখার ওপর নির্ভর করে এবং একদিন এদিক-ওদিক হতে পারে। আপনার এলাকার তারিখ ভিন্ন হলে এখানে সমন্বয় করুন; আপনার পছন্দ এই ডিভাইসে সংরক্ষিত থাকে।':'Hijri dates depend on local moon sighting and can differ by a day. If your community’s date is different, adjust it here; your choice is saved on this device.'}</p>
+        </header>
+        <div class="cal-layout">
+        <aside class="cal-aside" aria-label="${l==='bn'?'আজকের তারিখ':'Today'}">${calTodayCardHtml(d,l,todayH)}</aside>
+        <div class="cal-main">
         <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-200'} border rounded-2xl overflow-hidden reveal" style="box-shadow:0 4px 24px rgba(0,0,0,.10)" role="group" aria-label="${monthNameHijri} ${l==='bn'?toBengaliDigits(year):year} ${l==='bn'?'হিজরি ক্যালেন্ডার':'Hijri calendar'}">
 
             <!-- ── HEADER ── -->
@@ -1322,7 +1412,7 @@ function renderCalendarPage() {
 
             <!-- ── DAY HEADERS ── -->
             <div class="grid grid-cols-7" role="row" style="background:${d?'#111827':'#f1f5f9'}">
-                ${[0,1,2,3,4,5,6].map(i=>{
+                ${weekOrder.map(i=>{
                     const isFri=i===5, isSat=i===6;
                     const bg = isFri ? '#dc2626' : isSat ? '#1d4ed8' : (d?'#374151':'#475569');
                     return `<div role="columnheader" style="background:${bg};color:white;text-align:center;padding:7px 2px;font-size:.72rem;font-weight:700;letter-spacing:.03em">
@@ -1453,6 +1543,10 @@ function renderCalendarPage() {
                 </div>`;
             })()}
         </div>
+        </div>
+        </div>
+        <p class="text-xs ${d?'text-gray-400':'text-gray-500'}" style="line-height:1.6">${l==='bn'?'ইসলামি দিন সূর্যাস্ত থেকে শুরু হয়, তাই যে উপলক্ষ রাত হিসেবে পালিত হয় তা আগের সন্ধ্যায় পালন করা হয়।':'The Islamic day begins at sunset: occasions marked as a night are observed on the evening before.'}</p>
+        ${calYearOccasionsHtml(year,d,l)}
         ${typeof dcCalendarCard==='function'?dcCalendarCard(d,l):''}<!-- v207: date converter -->
     </div>`;
 }

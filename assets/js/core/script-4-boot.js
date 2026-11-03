@@ -697,7 +697,8 @@ function renderMainContent() {
             playlists: () => typeof renderPlaylistsPage === 'function' ? renderPlaylistsPage() : '<div class="text-center py-8">Loading...</div>',
             // v228: looked up at call time (diagnostics.js loads after this file)
             diagnostics: () => typeof renderDiagnosticsPage === 'function' ? renderDiagnosticsPage() : '<div class="text-center py-8">Loading...</div>',
-            muharram:renderMuharramPage,
+            // v253: looked up at call time so muharram-plus.js (loads after this file) can wrap it
+            muharram: () => renderMuharramPage(),
             'shia-days':renderShiaDaysPage,
             familyTree: typeof renderAhlulBaytFamilyTreeRedirect === 'function' ? renderAhlulBaytFamilyTreeRedirect : renderFamilyTreePage,
             ahlulBaytUnified: typeof renderAhlulBaytUnifiedPage === 'function' ? renderAhlulBaytUnifiedPage : () => '<div class="text-center py-8">Loading...</div>',
@@ -787,55 +788,198 @@ function render() {
 }
 
 // ============================================================================
-// PWA SERVICE WORKER (Inline) — UPGRADED
+// PWA SERVICE WORKER & INSTALLATION EXPERIENCE (v249)
 // ============================================================================
 let _pwaInstallPrompt = null; // store beforeinstallprompt event
+const PWA_DISMISS_KEY = 'ab_pwa_install_dismissed_until';
+
+function isPWAInstalled() {
+    try {
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+        if (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) return true;
+        if (window.matchMedia && window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+        if (window.navigator.standalone === true) return true;
+        if (document.referrer && document.referrer.includes('android-app://')) return true;
+    } catch(e) {}
+    return false;
+}
+window.isPWAInstalled = isPWAInstalled;
+
+function getPWAPlatform() {
+    const ua = (navigator.userAgent || '') + ' ' + (navigator.vendor || '');
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+    const isNonSafariIOS = isIOS && /(CriOS|FxiOS|OPiOS|EdgiOS|DuckDuckGo)/i.test(ua);
+    const isIOSSafari = isIOS && !isNonSafariIOS;
+    const isDesktop = !isIOS && !isAndroid;
+    return { isIOS, isIOSSafari, isNonSafariIOS, isAndroid, isDesktop };
+}
+
+function isPWABannerDismissed() {
+    try {
+        const val = localStorage.getItem(PWA_DISMISS_KEY);
+        if (!val) return false;
+        const until = parseInt(val, 10);
+        return !isNaN(until) && Date.now() < until;
+    } catch(e) { return false; }
+}
+
+function setPWABannerDismissed(days) {
+    try {
+        const d = (typeof days === 'number') ? days : 7;
+        localStorage.setItem(PWA_DISMISS_KEY, String(Date.now() + d * 24 * 60 * 60 * 1000));
+    } catch(e) {}
+}
 
 function registerPWA() {
     // ── 1. Install prompt listener ──
     window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         _pwaInstallPrompt = e;
-        // Show install banner after 3s if not already installed
-        setTimeout(() => showPWAInstallBanner(), 3000);
+        // Show install banner after 3s if not already installed and not dismissed
+        if (!isPWAInstalled() && !isPWABannerDismissed()) {
+            setTimeout(() => showPWAInstallBanner(), 3000);
+        }
     });
 
-    // ── 2. Service Worker (real static file — blob: URL registration is
-    //      blocked by modern Chrome, which meant this silently never worked) ──
+    // ── 1b. App installed listener ──
+    window.addEventListener('appinstalled', () => {
+        _pwaInstallPrompt = null;
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.remove();
+        const modal = document.getElementById('pwa-install-modal');
+        if (modal) modal.remove();
+        const bn = (state && state.language) !== 'en';
+        if (typeof showToast === 'function') {
+            showToast(bn ? '✅ অ্যাপ সফলভাবে ইনস্টল হয়েছে!' : '✅ App successfully installed!', 'success');
+        }
+        if (typeof render === 'function') render();
+    });
+
+    // iOS Safari does not fire beforeinstallprompt — show banner after 4s if eligible
+    const platform = getPWAPlatform();
+    if (platform.isIOS && !isPWAInstalled() && !isPWABannerDismissed()) {
+        setTimeout(() => showPWAInstallBanner(), 4000);
+    }
+
+    // ── 2. Service Worker (real static file with waiting-worker detection) ──
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker.register('./sw.js', {scope:'./'})
         .then(reg => {
             // Check for updates every 30 min
-            setInterval(() => reg.update(), 30 * 60 * 1000);
+            setInterval(() => {
+                reg.update().catch(() => {});
+            }, 30 * 60 * 1000);
+
+            // Listen for waiting service worker
+            initSWUpdateListener(reg);
         })
         .catch(e => console.error('SW registration failed:', e));
 
-    // ── Auto-reload once when a new Service Worker takes control, so an
-    //    already-open tab (the common case on mobile, where people rarely
-    //    force-close a browser tab or PWA) actually picks up the new
-    //    JS/CSS after an update instead of continuing to run whatever it
-    //    loaded with until someone manually pulls-to-refresh. sw.js's
-    //    skipWaiting()/clients.claim() already make the new worker take
-    //    over quickly — this is the missing other half, reacting to that
-    //    handover on the page side. `_pwaReloading` guards against a
-    //    reload loop, since some browsers can fire 'controllerchange' more
-    //    than once. ──
+    // ── Auto-reload once when a new Service Worker takes control ──
     let _pwaReloading = false;
     const _hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (_pwaReloading) return;
+        // On first install, there was no controller initially — do not reload!
+        if (!_hadController) return;
+
         _pwaReloading = true;
-        // soft hint shown once, right after the reload (see showUpdateHint below)
-        if (_hadController) { try { sessionStorage.setItem('ab_updated', '1'); } catch(e) {} }
+        try { sessionStorage.setItem('ab_updated', '1'); } catch(e) {}
         window.location.reload();
     });
+}
 
-    // ── 3. PWA Manifest — now a real static file (./manifest.json), linked
-    //      directly in index.html and sw.js-precached. No JS needed here
-    //      anymore; this used to build the manifest at runtime as a Blob
-    //      URL with a silent try/catch, which meant no manifest existed
-    //      until this ran (or at all, if it failed) — bad for
-    //      installability and impossible to precache for offline. ──
+// ============================================================================
+// PWA UPDATE AVAILABLE SYSTEM (v250)
+// ============================================================================
+const PWA_UPDATE_DISMISS_KEY = 'ab_pwa_update_dismissed';
+let _userTriggeredUpdate = false;
+
+function initSWUpdateListener(reg) {
+    if (!reg) return;
+
+    function handleWorkerState(worker) {
+        if (!worker) return;
+        worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                showPWAUpdateNotification(worker);
+            }
+        });
+    }
+
+    if (reg.waiting && navigator.serviceWorker.controller) {
+        showPWAUpdateNotification(reg.waiting);
+    }
+
+    if (reg.installing) {
+        handleWorkerState(reg.installing);
+    }
+
+    reg.addEventListener('updatefound', () => {
+        if (reg.installing) {
+            handleWorkerState(reg.installing);
+        }
+    });
+}
+
+function showPWAUpdateNotification(waitingWorker) {
+    if (!waitingWorker) return;
+    try {
+        if (sessionStorage.getItem(PWA_UPDATE_DISMISS_KEY) === '1') return;
+    } catch(e) {}
+    if (document.getElementById('pwa-update-banner')) return;
+
+    // Remove install banner if active so they never overlap
+    const installBanner = document.getElementById('pwa-install-banner');
+    if (installBanner) installBanner.remove();
+
+    const bn = (state && state.language) !== 'en';
+    const banner = document.createElement('div');
+    banner.id = 'pwa-update-banner';
+    banner.setAttribute('role', 'alert');
+    banner.setAttribute('aria-live', 'assertive');
+    banner.innerHTML = `
+        <div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9998;max-width:400px;width:calc(100% - 32px)">
+            <div class="ab-banner" style="display:flex;align-items:center;gap:12px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.4);border:1.5px solid rgba(251,191,36,.45);background:linear-gradient(135deg,#062b21,#021a14)">
+                <div class="ab-banner-icon" style="font-size:1.4rem" aria-hidden="true">✨</div>
+                <div style="flex:1;min-width:0">
+                    <p class="t-sub" style="color:#fef3c7;margin:0 0 2px;font-weight:700;font-size:.92rem">${bn ? 'নতুন আপডেট প্রস্তুত!' : 'Update Available!'}</p>
+                    <p class="t-label" style="color:rgba(255,255,255,.82);font-size:.78rem;margin:0">${bn ? 'নতুন সুবিধা পেতে এখনই আপডেট করুন' : 'Update now to get the latest features'}</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
+                    <button id="pwa-update-now" class="ab-btn ab-btn-gold" style="min-height:38px;padding:6px 14px;font-size:.85rem;font-weight:700">
+                        ${bn ? 'আপডেট করুন' : 'Update Now'}
+                    </button>
+                    <button id="pwa-update-later" class="ab-btn ab-btn-ghost-light" style="min-height:38px;padding:6px 10px;font-size:.82rem" aria-label="${bn ? 'পরে' : 'Later'}">
+                        ${bn ? 'পরে' : 'Later'}
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(banner);
+
+    const updateBtn = document.getElementById('pwa-update-now');
+    if (updateBtn) {
+        updateBtn.onclick = () => {
+            updateBtn.disabled = true;
+            updateBtn.innerText = bn ? 'আপডেট হচ্ছে...' : 'Updating...';
+            _userTriggeredUpdate = true;
+            try {
+                waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+            } catch(e) {
+                window.location.reload();
+            }
+        };
+    }
+
+    const laterBtn = document.getElementById('pwa-update-later');
+    if (laterBtn) {
+        laterBtn.onclick = () => {
+            try { sessionStorage.setItem(PWA_UPDATE_DISMISS_KEY, '1'); } catch(e) {}
+            banner.remove();
+        };
+    }
 }
 
 // Gentle 'updated' hint — appears once after an automatic update reload
@@ -850,40 +994,359 @@ function showUpdateHint() {
 setTimeout(showUpdateHint, 4500);
 
 function showPWAInstallBanner() {
-    if (!_pwaInstallPrompt) return;
+    if (isPWAInstalled()) return;
+    if (isPWABannerDismissed()) return;
     if (document.getElementById('pwa-install-banner')) return;
-    const l = state.language;
-    const d = state.darkMode;
+    const platform = getPWAPlatform();
+    if (!_pwaInstallPrompt && !platform.isIOS) return;
+
+    const bn = (state && state.language) !== 'en';
     const banner = document.createElement('div');
     banner.id = 'pwa-install-banner';
     banner.innerHTML = `
-        <div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;max-width:360px;width:calc(100% - 32px)">
-            <div class="ab-banner" style="display:flex;align-items:center;gap:12px;padding:14px 16px">
-                <div class="ab-banner-icon">📲</div>
+        <div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;max-width:380px;width:calc(100% - 32px)">
+            <div class="ab-banner" style="display:flex;align-items:center;gap:12px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.35);border:1px solid rgba(52,211,153,.35)">
+                <div class="ab-banner-icon" style="font-size:1.4rem" aria-hidden="true">📲</div>
                 <div style="flex:1;min-width:0">
-                    <p class="t-sub" style="color:#fff;margin-bottom:2px">${l==='bn'?'অ্যাপ হিসেবে ইনস্টল করুন':'Install as App'}</p>
-                    <p class="t-label" style="color:rgba(255,255,255,.78)">${l==='bn'?'অফলাইনেও ব্যবহার করুন':'Works offline too'}</p>
+                    <p class="t-sub" style="color:#fff;margin-bottom:2px;font-weight:700">${bn ? 'অ্যাপ হিসেবে ইনস্টল করুন' : 'Install as App'}</p>
+                    <p class="t-label" style="color:rgba(255,255,255,.82);font-size:.78rem">${bn ? 'অফলাইনে দ্রুত ব্যবহারের সুবিধা' : 'Fast & works offline'}</p>
                 </div>
                 <div style="display:flex;gap:8px;flex-shrink:0">
-                    <button id="pwa-install-yes" class="ab-btn ab-btn-gold">${l==='bn'?'ইনস্টল':'Install'}</button>
-                    <button id="pwa-install-no" class="ab-btn ab-btn-ghost-light" aria-label="${l==='bn'?'বন্ধ করুন':'Dismiss'}">✕</button>
+                    <button id="pwa-install-yes" class="ab-btn ab-btn-gold" style="min-height:38px;padding:6px 14px;font-size:.85rem">${bn ? 'ইনস্টল' : 'Install'}</button>
+                    <button id="pwa-install-no" class="ab-btn ab-btn-ghost-light" style="min-height:38px;min-width:38px;padding:6px" aria-label="${bn ? 'বন্ধ করুন' : 'Dismiss'}">✕</button>
                 </div>
             </div>
         </div>`;
     document.body.appendChild(banner);
-    document.getElementById('pwa-install-yes').onclick = async () => {
-        if (_pwaInstallPrompt) {
-            _pwaInstallPrompt.prompt();
-            const { outcome } = await _pwaInstallPrompt.userChoice;
-            if (outcome === 'accepted') showToast(l==='bn'?'✅ অ্যাপ ইনস্টল হচ্ছে!':'✅ App installing!', 'success');
-            _pwaInstallPrompt = null;
-        }
-        banner.remove();
-    };
-    document.getElementById('pwa-install-no').onclick = () => banner.remove();
-    setTimeout(() => banner.remove(), 12000);
+
+    const yesBtn = document.getElementById('pwa-install-yes');
+    if (yesBtn) {
+        yesBtn.onclick = () => {
+            banner.remove();
+            if (_pwaInstallPrompt) {
+                _pwaInstallPrompt.prompt()
+                    .then(() => _pwaInstallPrompt.userChoice)
+                    .then(res => {
+                        if (res && res.outcome === 'accepted') {
+                            if (typeof showToast === 'function') {
+                                showToast(bn ? '✅ অ্যাপ ইনস্টল হচ্ছে!' : '✅ App installing!', 'success');
+                            }
+                            _pwaInstallPrompt = null;
+                        } else {
+                            showPWAInstallModal();
+                        }
+                    })
+                    .catch(() => showPWAInstallModal());
+            } else {
+                showPWAInstallModal();
+            }
+        };
+    }
+    const noBtn = document.getElementById('pwa-install-no');
+    if (noBtn) {
+        noBtn.onclick = () => {
+            setPWABannerDismissed(7);
+            banner.remove();
+        };
+    }
+    setTimeout(() => {
+        if (banner && banner.parentNode) banner.remove();
+    }, 15000);
 }
 
+// ============================================================================
+// PWA INSTALLATION MODAL (Bilingual, Accessible, Multi-Platform)
+// ============================================================================
+function showPWAInstallModal() {
+    const existing = document.getElementById('pwa-install-modal');
+    if (existing) {
+        const closeBtn = existing.querySelector('.pwa-modal-close');
+        if (closeBtn) closeBtn.focus();
+        return;
+    }
+
+    // Save activeElement before opening modal to restore keyboard focus on close
+    const previousActiveElement = document.activeElement;
+
+    const d = state.darkMode;
+    const bn = (state && state.language) !== 'en';
+    const platform = getPWAPlatform();
+
+    const bgCard = d ? '#061a14' : '#ffffff';
+    const borderCard = d ? 'rgba(52,211,153,.25)' : 'rgba(5,150,105,.22)';
+    const textMain = d ? '#ecfdf5' : '#111827';
+    const textMuted = d ? 'rgba(236,253,245,.72)' : '#4b5563';
+    const bgStep = d ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.03)';
+    const borderStep = d ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+
+    const modal = document.createElement('div');
+    modal.id = 'pwa-install-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'pwa-install-title');
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);';
+
+    let directBtnHtml = '';
+    if (_pwaInstallPrompt) {
+        directBtnHtml = `
+            <div style="margin-bottom:18px;text-align:center">
+                <button id="pwa-modal-direct-btn"
+                    style="width:100%;min-height:48px;padding:12px 20px;border-radius:14px;background:linear-gradient(135deg,#059669,#047857);color:#ffffff;font-weight:700;font-size:1rem;border:1px solid rgba(52,211,153,.4);box-shadow:0 6px 20px rgba(5,150,105,.35);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px"
+                    class="active:scale-95 transition-all">
+                    <span>📲</span>
+                    <span>${bn ? 'সরাসরি ইনস্টল করুন' : 'Install Directly Now'}</span>
+                </button>
+            </div>
+        `;
+    }
+
+    let stepsHtml = '';
+    if (platform.isIOS) {
+        if (platform.isNonSafariIOS) {
+            // Chrome, Firefox, Edge or other third-party browser on iOS
+            stepsHtml = `
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="padding:10px 12px;border-radius:12px;background:${d?'rgba(251,191,36,.12)':'rgba(245,158,11,.1)'};border:1px solid ${d?'rgba(251,191,36,.25)':'rgba(245,158,11,.25)'}">
+                        <p style="margin:0;font-size:.82rem;line-height:1.45;color:${d?'#fef3c7':'#92400e'};font-weight:600">
+                            ${bn
+                                ? '⚠️ আইওএস (iOS)-এ ব্রাউজার ও সিস্টেম ভার্সন ভেদে ইনস্টলেশন সুবিধা ভিন্ন হতে পারে।'
+                                : '⚠️ Installation options on iOS vary depending on your browser and iOS version.'}
+                        </p>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                        <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">১</div>
+                        <div style="flex:1;font-size:.88rem;line-height:1.5;color:${textMain}">
+                            ${bn
+                                ? 'আপনার ব্রাউজারের শেয়ার মেনুতে <strong>"Add to Home Screen"</strong> বা <strong>"হোম স্ক্রিনে যোগ করুন"</strong> অপশন আছে কি না দেখুন (iOS 16.4+ সমর্থিত)।'
+                                : 'Check your browser’s Share menu for <strong>"Add to Home Screen"</strong> (supported on iOS 16.4+ in some browsers).'}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                        <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">২</div>
+                        <div style="flex:1;font-size:.88rem;line-height:1.5;color:${textMain}">
+                            ${bn
+                                ? '<strong>সেরা অভিজ্ঞতার জন্য:</strong> অপশনটি না পেলে লিংকটি কপি করে অ্যাপলের <strong>Safari (সাফারি)</strong> ব্রাউজারে খুলুন এবং শেয়ার (<span style="display:inline-flex;vertical-align:middle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>) থেকে সরাসরি "Add to Home Screen" বেছে নিন।'
+                                : '<strong>Recommended:</strong> If unavailable, copy this URL and open it in Apple <strong>Safari</strong>, then tap Share (<span style="display:inline-flex;vertical-align:middle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>) → "Add to Home Screen".'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Safari on iOS
+            stepsHtml = `
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                        <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">১</div>
+                        <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                            ${bn
+                                ? 'সাফারি ব্রাউজারের নিচে (বা আইপ্যাডে উপরে) <strong>শেয়ার আইকন</strong> <span style="display:inline-flex;align-items:center;vertical-align:middle;margin:0 2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> চাপুন।'
+                                : 'Tap the <strong>Share button</strong> <span style="display:inline-flex;align-items:center;vertical-align:middle;margin:0 2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> at the bottom of Safari (or top on iPad).'}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                        <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">২</div>
+                        <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                            ${bn
+                                ? 'একটু নিচের দিকে স্ক্রোল করে <strong>"হোম স্ক্রিনে যোগ করুন" (Add to Home Screen)</strong> অপশনটিতে চাপুন।'
+                                : 'Scroll down and tap <strong>"Add to Home Screen"</strong>.'}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                        <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">৩</div>
+                        <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                            ${bn
+                                ? 'উপরে ডানদিকের <strong>"যোগ করুন" (Add)</strong> বাটনে চাপলেই আপনার হোম স্ক্রিনে অ্যাপ যুক্ত হয়ে যাবে।'
+                                : 'Tap <strong>"Add"</strong> in the top-right corner to complete installation.'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else if (platform.isAndroid) {
+        stepsHtml = `
+            ${directBtnHtml}
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">১</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? 'ব্রাউজারের উপরের ডান কোনায় <strong>৩-ডট মেনু (⋮)</strong> চাপুন।'
+                            : 'Tap the <strong>3-dot menu (⋮)</strong> in your browser.'}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">২</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? 'মেনু থেকে <strong>"অ্যাপ ইনস্টল করুন" (Install app)</strong> অথবা <strong>"হোম স্ক্রিনে যোগ করুন" (Add to Home screen)</strong> বেছে নিন।'
+                            : 'Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.'}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">৩</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? 'ইনস্টল বাটনে চাপুন। এরপর অ্যাপটি অফলাইনেও ফুল স্ক্রিনে চলবে।'
+                            : 'Confirm to install. The app will work offline from your app drawer.'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        // Desktop / Generic
+        stepsHtml = `
+            ${directBtnHtml}
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">১</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? 'ব্রাউজারের অ্যাড্রেস বারের ডানপাশে <strong>ইনস্টল আইকন</strong> <span style="display:inline-flex;vertical-align:middle">📲</span> বা <strong>মেনু (⋮)</strong> চাপুন।'
+                            : 'Click the <strong>Install icon</strong> in the address bar or open the <strong>browser menu (⋮)</strong>.'}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">২</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? '<strong>"আহলে বাইত ইনস্টল করুন" (Install Ahl al-Bayt)</strong> অপশনটিতে ক্লিক করুন।'
+                            : 'Select <strong>"Install Ahl al-Bayt"</strong>.'}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:${bgStep};border:1px solid ${borderStep}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">৩</div>
+                    <div style="flex:1;font-size:.9rem;line-height:1.5;color:${textMain}">
+                        ${bn
+                            ? 'ইনস্টল নিশ্চিত করুন। এটি ডেস্কটপে আলাদা উইন্ডোতে দ্রুত গতিতে চলবে।'
+                            : 'Confirm installation to run as a fast standalone desktop application.'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    modal.innerHTML = `
+        <div style="background:${bgCard};border:1.5px solid ${borderCard};border-radius:24px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.5);position:relative">
+            <!-- Close Button -->
+            <button class="pwa-modal-close" aria-label="${bn ? 'বন্ধ করুন' : 'Close'}"
+                style="position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:12px;border:none;background:${bgStep};color:${textMain};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;font-weight:700;transition:all .15s">
+                ✕
+            </button>
+
+            <!-- Header -->
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-right:36px">
+                <img src="./icon-192.png" alt="" style="width:52px;height:52px;border-radius:14px;box-shadow:0 4px 14px rgba(5,150,105,.35);flex-shrink:0">
+                <div>
+                    <h3 id="pwa-install-title" style="margin:0 0 3px;font-size:1.15rem;font-weight:800;color:${textMain};line-height:1.3">
+                        ${bn ? 'অ্যাপ ইনস্টল করুন' : 'Install App'}
+                    </h3>
+                    <p style="margin:0;font-size:.78rem;color:#059669;font-weight:600">
+                        ${bn ? 'অফলাইন সুবিধা · দ্রুত গতি · বিনামূল্যে' : 'Offline Ready · Ultra Fast · Free'}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Steps Section -->
+            <div style="margin-bottom:18px">
+                ${stepsHtml}
+            </div>
+
+            <!-- Clarification Notice (No App Store claim) -->
+            <div style="padding:10px 12px;border-radius:12px;background:${d ? 'rgba(52,211,153,.08)' : 'rgba(5,150,105,.06)'};border:1px solid ${d ? 'rgba(52,211,153,.15)' : 'rgba(5,150,105,.12)'};margin-bottom:16px">
+                <p style="margin:0;font-size:.76rem;line-height:1.5;color:${textMuted}">
+                    ${bn
+                        ? '📌 এটি একটি প্রগ্রেসিভ ওয়েব অ্যাপ (PWA)। প্লে স্টোর বা অ্যাপ স্টোর ছাড়াই সরাসরি ব্রাউজার থেকে ডিভাইসে নিরাপদভাবে ইনস্টল হয় এবং অফলাইনেও কাজ করে।'
+                        : '📌 This is a Progressive Web App (PWA). It installs directly from your browser without an app store and runs smoothly offline.'}
+                </p>
+            </div>
+
+            <!-- Footer Close -->
+            <div style="text-align:center">
+                <button id="pwa-modal-dismiss-btn"
+                    style="width:100%;min-height:44px;padding:10px 18px;border-radius:12px;background:${bgStep};color:${textMain};font-weight:600;font-size:.9rem;border:1px solid ${borderStep};cursor:pointer"
+                    class="hover:opacity-80 transition-all">
+                    ${bn ? 'ঠিক আছে, বুঝতে পেরেছি' : 'Got it, Close'}
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => {
+        document.removeEventListener('keydown', onKeyDown);
+        if (modal && modal.parentNode) modal.remove();
+        if (previousActiveElement && typeof previousActiveElement.focus === 'function' && document.contains(previousActiveElement)) {
+            try { previousActiveElement.focus(); } catch(e) {}
+        }
+    };
+
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    const closeBtn = modal.querySelector('.pwa-modal-close');
+    if (closeBtn) {
+        closeBtn.onclick = closeModal;
+        closeBtn.focus();
+    }
+    const dismissBtn = document.getElementById('pwa-modal-dismiss-btn');
+    if (dismissBtn) dismissBtn.onclick = closeModal;
+
+    const directBtn = document.getElementById('pwa-modal-direct-btn');
+    if (directBtn) {
+        directBtn.onclick = () => {
+            closeModal();
+            if (_pwaInstallPrompt) {
+                _pwaInstallPrompt.prompt()
+                    .then(() => _pwaInstallPrompt.userChoice)
+                    .then(res => {
+                        if (res && res.outcome === 'accepted') {
+                            const bnChoice = (state && state.language) !== 'en';
+                            if (typeof showToast === 'function') {
+                                showToast(bnChoice ? '✅ অ্যাপ ইনস্টল হচ্ছে!' : '✅ App installing!', 'success');
+                            }
+                            _pwaInstallPrompt = null;
+                        }
+                    })
+                    .catch(() => {});
+            }
+        };
+    }
+}
+window.showPWAInstallModal = showPWAInstallModal;
+
+window.triggerPWAInstall = function() {
+    const bn = (state && state.language) !== 'en';
+    if (isPWAInstalled()) {
+        if (typeof showToast === 'function') {
+            showToast(bn ? '✅ অ্যাপটি ইতিমধ্যে আপনার ডিভাইসে ইনস্টল করা আছে!' : '✅ The app is already installed on your device!', 'info');
+        }
+        return;
+    }
+    if (_pwaInstallPrompt) {
+        _pwaInstallPrompt.prompt()
+            .then(() => _pwaInstallPrompt.userChoice)
+            .then(choice => {
+                if (choice && choice.outcome === 'accepted') {
+                    if (typeof showToast === 'function') {
+                        showToast(bn ? '✅ অ্যাপ ইনস্টল হচ্ছে...' : '✅ App installing...', 'success');
+                    }
+                    _pwaInstallPrompt = null;
+                } else {
+                    showPWAInstallModal();
+                }
+            })
+            .catch(() => showPWAInstallModal());
+    } else {
+        showPWAInstallModal();
+    }
+};
 // ============================================================================
 // SPLASH SCREEN
 // ============================================================================
@@ -1051,6 +1514,24 @@ function getAshuraGregorianDate() {
 // ============================================================================
 // মুহাররম / আশুরা পেজ — CRUD সহ
 // ============================================================================
+// v254: one martyr card. The serial prefix ("১. " / "1. ") is stripped at render time (data rows unchanged);
+// hue = idx*35 mod 360 gives all 72 cards a different hue (multiples of 5°) with neighbours 35° apart.
+function mhMartyrCardHtml(m, idx, d) {
+    const h = (idx * 35) % 360;
+    const name = String(m.n).replace(/^[0-9\u09E6-\u09EF]+\s*[.\u0964]\s*/, '');
+    const bg = d ? 'hsl(' + h + ',30%,17%)' : 'hsl(' + h + ',85%,96%)';
+    const bd = d ? 'hsl(' + h + ',38%,32%)' : 'hsl(' + h + ',60%,82%)';
+    const ac = d ? 'hsl(' + h + ',62%,56%)' : 'hsl(' + h + ',68%,40%)';
+    const ar = d ? 'hsl(' + h + ',75%,80%)' : 'hsl(' + h + ',70%,28%)';
+    const tx = d ? '#f3f4f6' : '#111827';
+    const tg = d ? '#cbd5e1' : '#475569';
+    return '<div class="mh-mcard" role="listitem" style="--mh-bg:' + bg + ';--mh-bd:' + bd + ';--mh-ac:' + ac + ';--mh-ar:' + ar + ';--mh-tx:' + tx + ';--mh-tg:' + tg + '">'
+        + '<span class="mh-mbar" aria-hidden="true"></span>'
+        + '<div class="mh-mhead"><span class="mh-mdot" aria-hidden="true">✦</span><div class="mh-mname">' + name + '</div></div>'
+        + '<div class="mh-mar arabic-text" dir="rtl">' + m.a + '</div>'
+        + '<div class="mh-mtag">' + m.t + '</div></div>';
+}
+
 function renderMuharramPage() {
     const d = state.darkMode, l = state.language;
     const { date: ashuraDate, hijriYear } = getAshuraGregorianDate();
@@ -1064,21 +1545,71 @@ function renderMuharramPage() {
     const ashuraDateStr = ashuraDate.getDate()+' '+gregMonthsEn2[ashuraDate.getMonth()]+' '+ashuraDate.getFullYear();
 
     // Static + custom events merged
+    // v254: Karbala chronology rewritten from the site's own source text (Tabari / Mufid / Ibn Tawus /
+    // Kamil al-Ziyarat). `mday` = the Muharram day (1-10) the entry belongs to; it drives the "আজ" marker
+    // here and today's entry on the Muharram card (muharram-plus.js). Entries without `mday` are outside 1-10 Muharram.
+    const mhT = (bn, en) => l === 'bn' ? bn : en;
     const staticTimeline = [
-        {id:'s1', icon:'🚶', date:l==='bn'?'১ মুহাররম':'1 Muharram', color:'#3b82f6', titleBn:l==='bn'?'ইমাম হোসাইন (আ.) মদিনা থেকে যাত্রা শুরু':'Imam Husayn (AS) Departs Madinah', descBn:l==='bn'?'ইয়াজিদের বায়াত প্রত্যাখ্যান করে পরিবার ও সঙ্গীদের নিয়ে মদিনা ত্যাগ করেন।':'Refusing to pledge allegiance to Yazid, he left Madinah with his family and companions.'},
-        {id:'s2', icon:'🏜️', date:l==='bn'?'৩ মুহাররম':'3 Muharram', color:'#f59e0b', titleBn:l==='bn'?'কারবালায় পৌঁছানো':'Arrival at Karbala', descBn:l==='bn'?'ইমামের কাফেলা কারবালার প্রান্তরে পৌঁছায়। হুর ইবনে ইয়াযিদের বাহিনী পথ রোধ করে।':"The Imam\'s caravan reaches the plains of Karbala. Hurr ibn Yazid's forces block their path."},
-        {id:'s3', icon:'💧', date:l==='bn'?'৭ মুহাররম':'7 Muharram', color:'#ef4444', titleBn:l==='bn'?'পানি সরবরাহ বন্ধ':'Water Supply Cut Off', descBn:l==='bn'?'ফোরাত নদীর পানি সম্পূর্ণ বন্ধ করা হয়। ৭২ সঙ্গী ও শিশুরা পিপাসায় কষ্ট পেতে থাকে।':'Access to the Euphrates river is completely blocked. The 72 companions and children suffer from thirst.'},
-        {id:'s4', icon:'🌙', date:l==='bn'?'৯ মুহাররম (তাসুআ)':'9 Muharram (Tasua)', color:'#8b5cf6', titleBn:l==='bn'?'তাসুআ — শেষ রাত':'Tasua — The Last Night', descBn:l==='bn'?'ইমাম সঙ্গীদের মুক্ত করে দেন। রাতভর ইবাদত, নামাজ ও কুরআন তিলাওয়াত।':'The Imam releases his companions from obligation. The night is spent in worship, prayer, and recitation of the Quran.'},
-        {id:'s5', icon:'⚔️', date:l==='bn'?'১০ মুহাররম (আশুরা)':'10 Muharram (Ashura)', color:'#dc2626', titleBn:l==='bn'?'🔴 আশুরা — কারবালার মহাশাহাদাত':'🔴 Ashura — The Great Martyrdom of Karbala', descBn:l==='bn'?'৭২ জন বনাম ৩০,০০০ সৈন্য। একে একে সব সঙ্গী শহীদ হন। ইমাম হোসাইন (আ.) আসর নামাজের পর শাহাদাত বরণ করেন।':'72 against 30,000 soldiers. All companions are martyred one by one. Imam Husayn (AS) is martyred after the Asr prayer.'},
-        {id:'s6', icon:'⛓️', date:l==='bn'?'১১ মুহাররম':'11 Muharram', color:'#6b7280', titleBn:l==='bn'?'বন্দী কাফেলা কুফার পথে':'Captive Caravan Towards Kufa', descBn:l==='bn'?'হযরত যয়নাব (আ.) সহ মহিলা ও শিশুদের বন্দী করে কুফায় নেওয়া হয়।':'Lady Zaynab (AS) and the women and children are taken captive towards Kufa.'},
-        {id:'s7', icon:'🗣️', date:l==='bn'?'সফর মাস':'Month of Safar', color:'#059669', titleBn:l==='bn'?'যয়নাব (আ.)-এর ঐতিহাসিক ভাষণ':"Zaynab (AS)'s Historic Speech", descBn:l==='bn'?'যয়নাব (আ.) ইয়াজিদের দরবারে ঐতিহাসিক ভাষণ দেন। কারবালার বার্তা বিশ্বে ছড়িয়ে দেন।':"Zaynab (AS) delivers her historic speech in Yazid's court, spreading the message of Karbala to the world."},
+        {id:'s_bg', icon:'📖', date:mhT('পটভূমি','Background'), color:'#6b7280',
+            titleBn:mhT('কেন ইমাম হোসাইন (আ.) বায়াত করেননি','Why Husayn refused'),
+            descBn:mhT('মুআবিয়া তাঁর পুত্র ইয়াজিদকে উত্তরাধিকারী নির্ধারণ করায় ইমাম হাসান (আ.)-এর সঙ্গে সম্পাদিত চুক্তির শর্ত ভঙ্গ হয়। ৬০ হিজরির রজবে মুআবিয়া মারা গেলে ইয়াজিদ মদিনার গভর্নরকে ইমাম হোসাইনের বায়াত আদায়ের নির্দেশ দেন। ইমাম হোসাইন (আ.) তা প্রত্যাখ্যান করেন — একটি বহুল উদ্ধৃত বর্ণনা অনুযায়ী তিনি বলেন, তাঁর মতো কেউ ইয়াজিদের মতো কারও হাতে বায়াত করে না — এবং মক্কার পথে রওনা হন।',
+                       "Mu‘awiya’s designation of his son Yazid as successor broke the terms of the treaty with Imam Hasan. When Mu‘awiya died in Rajab 60 AH, Yazid ordered the governor of Medina to obtain Husayn’s allegiance. Husayn refused — in a widely cited report, declaring that one like him does not pledge allegiance to one like Yazid — and left for Mecca.")},
+        {id:'s_r15', icon:'⚰️', date:mhT('১৫ রজব ৬০ হি.','15 Rajab 60 AH'), color:'#6b7280',
+            titleBn:mhT('মুআবিয়ার মৃত্যু','Death of Mu‘awiya'),
+            descBn:mhT('মুআবিয়া মারা যান; ইয়াজিদ বায়াত দাবি করেন।','Death of Mu‘awiya; Yazid demands allegiance.')},
+        {id:'s_r28', icon:'🚶', date:mhT('২৮ রজব ৬০ হি.','28 Rajab 60 AH'), color:'#3b82f6',
+            titleBn:mhT('মদিনা ত্যাগ','Husayn leaves Medina'),
+            descBn:mhT('ইমাম হোসাইন (আ.) পরিবারসহ মদিনা ত্যাগ করেন।','Husayn leaves Medina with his family.')},
+        {id:'s_sh3', icon:'🕋', date:mhT('৩ শাবান ৬০ হি.','3 Sha‘ban 60 AH'), color:'#3b82f6',
+            titleBn:mhT('মক্কায় আগমন','Arrival in Mecca'),
+            descBn:mhT('তিনি মক্কায় পৌঁছান। কুফা থেকে চিঠি আসে, যেখানে তাঁকে নেতৃত্ব দেওয়ার আমন্ত্রণ জানানো হয়।','Arrival in Mecca. Letters arrive from Kufa inviting him to lead them.')},
+        {id:'s_rm', icon:'✉️', date:mhT('রমজান ৬০ হি.','Ramadan 60 AH'), color:'#3b82f6',
+            titleBn:mhT('মুসলিম ইবনে আকীলকে কুফায় প্রেরণ','Muslim ibn Aqil sent to Kufa'),
+            descBn:mhT('কুফার সমর্থন যাচাই করতে মুসলিম ইবনে আকীলকে পাঠানো হয়।','Muslim ibn Aqil is sent to Kufa to assess the support.')},
+        {id:'s_z8', icon:'🛤️', date:mhT('৮ জিলহজ ৬০ হি.','8 Dhu al-Hijja 60 AH'), color:'#f59e0b',
+            titleBn:mhT('মক্কা ত্যাগ','Husayn leaves Mecca'),
+            descBn:mhT('পবিত্র হারামে রক্তপাত হতে না দিতে ইমাম হোসাইন (আ.) মক্কা ছেড়ে ইরাকের পথে রওনা হন।','Husayn leaves Mecca for Iraq rather than allow bloodshed in the sanctuary.')},
+        {id:'s_z9', icon:'🕯️', date:mhT('৯ জিলহজ ৬০ হি.','9 Dhu al-Hijja 60 AH'), color:'#ef4444',
+            titleBn:mhT('কুফায় মুসলিম ইবনে আকীলের শাহাদাত','Muslim ibn Aqil is killed in Kufa'),
+            descBn:mhT('উবায়দুল্লাহ ইবনে যিয়াদের নির্দেশে কুফায় মুসলিম ইবনে আকীল নিহত হন।','Muslim ibn Aqil is killed in Kufa on the orders of Ubayd Allah ibn Ziyad.')},
+        {id:'s_road', icon:'🐎', date:mhT('পথে','On the road'), color:'#f59e0b',
+            titleBn:mhT('হুর ইবনে ইয়াযিদের বাহিনী','Al-Hurr intercepts the caravan'),
+            descBn:mhT('মুসলিমের মৃত্যুর খবর কাফেলার কাছে পৌঁছায়। হুর ইবনে ইয়াযিদ আর-রিয়াহির নেতৃত্বে একটি অশ্বারোহী বাহিনী কাফেলাকে আটকায় এবং কুফা থেকে দূরে সরিয়ে নিয়ে যায়।','News of Muslim’s death reaches the caravan. A cavalry force under al-Hurr ibn Yazid al-Riyahi intercepts it and escorts it away from Kufa.')},
+        {id:'s_m2', mday:2, icon:'🏜️', date:mhT('২ মুহাররম ৬১ হি.','2 Muharram 61 AH'), color:'#f59e0b',
+            titleBn:mhT('কারবালায় পৌঁছানো','Arrival at Karbala'),
+            descBn:mhT('ইমামের কাফেলা ফোরাত নদীর তীরে কারবালার প্রান্তরে পৌঁছায়।','The caravan arrives at Karbala, on the plain beside the Euphrates.')},
+        {id:'s_m3', mday:3, icon:'🪖', date:mhT('৩ মুহাররম ৬১ হি.','3 Muharram 61 AH'), color:'#ef4444',
+            titleBn:mhT('উমর ইবনে সা‘দের আগমন','Umar ibn Sa‘d arrives'),
+            descBn:mhT('উমর ইবনে সা‘দ কুফা থেকে সৈন্যবাহিনী নিয়ে পৌঁছান; এরপর আরও সৈন্য আসতে থাকে।','Umar ibn Sa‘d arrives with an army from Kufa; more troops follow.')},
+        {id:'s_m7', mday:7, icon:'💧', date:mhT('৭ মুহাররম ৬১ হি.','7 Muharram 61 AH'), color:'#ef4444',
+            titleBn:mhT('ফোরাতের পানি বন্ধ','Access to the Euphrates cut off'),
+            descBn:mhT('ফোরাত নদীতে প্রবেশাধিকার বন্ধ করে দেওয়া হয়।','Access to the Euphrates is cut off.')},
+        {id:'s_m9', mday:9, icon:'🌙', date:mhT('৯ মুহাররম ৬১ হি. (তাসুআ)','9 Muharram 61 AH (Tasu‘a)'), color:'#8b5cf6',
+            titleBn:mhT('তাসুআ — এক রাতের অবকাশ','Tasu‘a — one night’s respite'),
+            descBn:mhT('সৈন্যবাহিনী এগিয়ে আসে। ইমাম হোসাইন (আ.) নামাজ ও কুরআন তিলাওয়াতের জন্য এক রাতের অবকাশ চান।','The army advances; Husayn asks for one night’s respite for prayer and recitation of the Qur’an.')},
+        {id:'s_m10', mday:10, icon:'⚔️', date:mhT('১০ মুহাররম ৬১ হি. (আশুরা)','10 Muharram 61 AH (Ashura)'), color:'#dc2626',
+            titleBn:mhT('🔴 আশুরা — কারবালার মহাশাহাদাত','🔴 Ashura — the martyrdom at Karbala'),
+            descBn:mhT('হুর ইমামের পক্ষে যোগ দেন। ইমামের সঙ্গী ও পরিবারের সদস্যরা একে একে শহীদ হন। বিকেলে ইমাম হোসাইন (আ.) শহীদ হন। তাঁবুগুলো লুট করা হয় এবং পুড়িয়ে দেওয়া হয়।','Al-Hurr joins Husayn. His companions and family fall one by one. Husayn is killed in the afternoon. The tents are plundered and burned.')},
+        {id:'s_m11', mday:11, icon:'⛓️', date:mhT('১১ মুহাররম ৬১ হি. থেকে','11 Muharram 61 AH onwards'), color:'#6b7280',
+            titleBn:mhT('বন্দী কাফেলা','The captive caravan'),
+            descBn:mhT('নারী ও শিশুদের ইমাম আলী ইবনুল হুসাইন (আ.)-সহ বন্দী করে প্রথমে কুফা, পরে দামেস্কে নেওয়া হয়।','The women and children, with Ali ibn al-Husayn, are taken captive to Kufa and then to Damascus.')},
+        {id:'s_zay', icon:'🗣️', date:mhT('বন্দিদশায়','In captivity'), color:'#059669',
+            titleBn:mhT('সাইয়্যিদা যয়নাব (আ.)-এর নেতৃত্ব ও ভাষণ','Sayyida Zaynab leads the survivors'),
+            descBn:mhT('ইমামের বোন যয়নাব বিনতে আলী (আ.) বন্দীদের নেতৃত্ব দেন। কুফায় এবং দামেস্কে ইয়াজিদের সামনে তাঁর ভাষণ ঐতিহাসিক সূত্রে সংরক্ষিত আছে; এগুলোর কারণে কারবালার সত্য চাপা দেওয়া যায়নি।','His sister Sayyida Zaynab bint Ali led the survivors through captivity. Her addresses in Kufa and before Yazid in Damascus, preserved in historical sources, ensured that the truth of Karbala could not be buried.')},
+        {id:'s_ar', icon:'🌿', date:mhT('২০ সফর ৬১ হি. (আরবাঈন)','20 Safar 61 AH (Arba‘in)'), color:'#059669',
+            titleBn:mhT('আরবাঈন — চল্লিশতম দিন','Arba‘in — the fortieth day'),
+            descBn:mhT('শাহাদাতের চল্লিশতম দিনে সাহাবী জাবির ইবনে আবদুল্লাহ আল-আনসারী কবর যিয়ারত করেন।','The fortieth day. The Companion Jabir ibn Abd Allah al-Ansari visits the grave.')},
+        {id:'s_aft', icon:'🔥', date:mhT('৬৫–৬৬ হি.','65–66 AH'), color:'#6b7280',
+            titleBn:mhT('পরবর্তী প্রতিক্রিয়া','Aftermath'),
+            descBn:mhT('কারবালা উমাইয়া শাসনের বৈধতাকে নাড়িয়ে দেয়। ৬৫ হিজরিতে তাওয়াবুন (অনুতপ্তরা) বিদ্রোহ করে, আর ৬৬ হিজরিতে মুখতার ইবনে আবি উবায়দ কুফা দখল করে হত্যাকারীদের পিছু নেন।','Karbala shook the legitimacy of Umayyad rule. The Penitents (al-Tawwabun) rose in 65 AH, and al-Mukhtar ibn Abi Ubayd took Kufa in 66 AH and pursued those responsible for the killings.')}
     ];
+    window._mhStaticTimeline = staticTimeline; // v253: read by muharram-plus.js (today's event on the Muharram card)
     const allTimeline = [...staticTimeline, ...state.muharramEvents];
 
     const majalis = [
         {icon:'🕌', time:l==='bn'?'১–১০ মুহাররম':'1–10 Muharram', titleBn:l==='bn'?'মজলিস':'Majlis', descBn:l==='bn'?'শোকসভা যেখানে বক্তা কারবালার ঘটনা বর্ণনা করেন।':'A mourning gathering where a speaker narrates the events of Karbala.'},
         {icon:'🕯️', time:l==='bn'?'১০ মুহাররম রাত':'Night of 10 Muharram', titleBn:l==='bn'?'শাম-এ-গরিবান':'Sham-e-Ghariban', descBn:l==='bn'?'আশুরার রাতে মোমবাতি জ্বালিয়ে ইমামের শিবিরে আগুনের স্মরণ।':"Candles are lit on the night of Ashura to commemorate the burning of the Imam\'s camp."},
-        {icon:'🌿', time:l==='bn'?'২০ সফর':'20 Safar', titleBn:l==='bn'?'চেহলুম / আরবাঈন':'Chehlum / Arbaeen', descBn:l==='bn'?'শাহাদাতের ৪০তম দিন। যয়নাব ও সুরবীরা এই দিনে কারবালায় ফিরে আসেন।':'The 40th day after the martyrdom. Zaynab and the survivors returned to Karbala on this day.'},
+        {icon:'🌿', time:l==='bn'?'২০ সফর':'20 Safar', titleBn:l==='bn'?'চেহলুম / আরবাঈন':'Chehlum / Arbaeen', descBn:l==='bn'?'শাহাদাতের চল্লিশতম দিন। এই দিনে সাহাবী জাবির ইবনে আবদুল্লাহ আল-আনসারী কবর যিয়ারত করেন; আজও বিপুল সংখ্যক যাত্রী কারবালায় হেঁটে যান।':'The fortieth day after Ashura. The Companion Jabir ibn Abd Allah al-Ansari visited the grave; today vast numbers of pilgrims walk to Karbala.'},
     ];
 
     const cdHtml = isToday
@@ -1091,7 +1622,7 @@ function renderMuharramPage() {
     const isStatic = id => id && id.startsWith('s');
 
     // ── "আজ" marker: static events map to known Hijri Muharram days ──
-    const staticEventDay = {s1:1, s2:3, s3:7, s4:9, s5:10, s6:11}; // s7 = Safar, not matched here
+    const staticEventDay = {}; staticTimeline.forEach(e => { if (e.mday) staticEventDay[e.id] = e.mday; }); // v254: from each entry's own `mday`
     const hNow = approxHijriNow();
     const isMuharramNow = hNow.month === 1;
 
@@ -1152,11 +1683,36 @@ function renderMuharramPage() {
                         </div>
                     </div>
                 </div>`;}).join('')}
+                <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-2xl p-4 text-sm ${d?'text-gray-300':'text-gray-700'} leading-relaxed">
+                    <h4 class="font-bold mb-2">${l==='bn'?'📚 সূত্র সম্পর্কে':'📚 A note on sources'}</h4>
+                    <p>${l==='bn'
+                        ?'সবচেয়ে প্রাচীন বিস্তারিত বিবরণ সংকলন করেন আবু মিখনাফ (মৃ. ১৫৭ হি.), প্রত্যক্ষদর্শী ও তাঁদের উত্তরসূরিদের কাছ থেকে; এটি মূলত আল-তাবারির ইতিহাসের মাধ্যমে টিকে আছে। আল-মুফিদের আল-ইরশাদ এবং ইবনে তাউসের আল-লুহুফ শিয়া ধারার ক্লাসিক বিবরণ। পরবর্তী মাকতাল সাহিত্যে মাঝে মাঝে এমন খুঁটিনাটি যুক্ত হয়েছে যা প্রাচীন সূত্রে নেই; এই সাইট প্রাচীন বর্ণনার ওপর নির্ভর করে এবং বিতর্কিত খুঁটিনাটি চিহ্নিত করে।'
+                        :'The earliest detailed account was compiled by Abu Mikhnaf (d. 157 AH) from eyewitnesses and their descendants; it survives mainly through al-Tabari’s History. Al-Mufid’s al-Irshad and Ibn Tawus’s al-Luhuf are classic Shia accounts. Later maqtal literature sometimes adds details not found in early sources; this site relies on the early reports and marks contested details.'}</p>
+                    <ul class="mt-2 space-y-1 text-xs ${d?'text-gray-400':'text-gray-600'}" dir="ltr" style="text-align:left">
+                        <li>Tarikh al-Rusul wa al-Muluk — al-Tabari (d. 310 AH / 923 CE), year 61 AH</li>
+                        <li>Kitab al-Irshad — al-Mufid (d. 413 AH / 1022 CE), chapter on Imam al-Husayn</li>
+                        <li>al-Luhuf ‘ala Qatla al-Tufuf — Ibn Tawus (d. 664 AH / 1266 CE)</li>
+                        <li>Kamil al-Ziyarat — Ibn Qulawayh (d. 368 AH / 978–9 CE)</li>
+                        <li>Maqatil al-Talibiyyin — Abu al-Faraj al-Isfahani (d. 356 AH / 967 CE)</li>
+                        <li>Redemptive Suffering in Islam — Mahmoud Ayoub</li>
+                        <li>The Origins and Early Development of Shi‘a Islam — S. H. M. Jafri</li>
+                    </ul>
+                </div>
             </div>
 
             <!-- ─── মজলিস ─── -->
             <div id="mhp-mj" class="mhp space-y-4" style="display:none">
                 <h3 class="text-xl font-bold">${l==='bn'?'🕌 মজলিস ও বিশেষ আমল':'🕌 Majlis & Special Practices'}</h3>
+                <!-- v254: "Commemoration" — from the site's Karbala source text -->
+                <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-2xl p-5 space-y-3" style="border-left:4px solid #dc2626">
+                    <h4 class="font-bold">${l==='bn'?'স্মরণ':'Commemoration'}</h4>
+                    <p class="text-sm ${d?'text-gray-300':'text-gray-700'} leading-relaxed">${l==='bn'
+                        ?'ইমামদের সময় থেকেই ইমাম হোসাইন (আ.)-এর স্মরণকে ইবাদত হিসেবে শেখানো হয়েছে। মজলিসে ঘটনাগুলো ও তার তাৎপর্য বর্ণনা করা হয়; মর্সিয়া, কবিতা ও মিছিল সেগুলোকে জনস্মৃতিতে জীবিত রাখে; আর তাঁর রওযার যিয়ারত শিয়া চর্চায় সবচেয়ে গুরুত্বপূর্ণ মুস্তাহাব আমলগুলোর অন্যতম। ইমাম আল-বাকির (আ.) থেকে বর্ণিত যিয়ারত আশুরা ব্যাপকভাবে পড়া হয়।'
+                        :'From the time of the Imams, the remembrance of Husayn has been taught as an act of devotion. Mourning gatherings (majalis) recount the events and their meaning; elegies (marathi), poetry and processions keep them in the public memory; and the visitation (ziyara) of his shrine is among the most emphasised recommended acts in Shia practice. Ziyarat Ashura, transmitted from Imam al-Baqir, is recited widely.'}</p>
+                    <p class="text-sm ${d?'text-gray-300':'text-gray-700'} leading-relaxed">${l==='bn'
+                        ?'আরবাঈনে, আশুরার চল্লিশতম দিনে, বিপুল সংখ্যক যাত্রী কারবালায় হেঁটে যান — পৃথিবীর অন্যতম বৃহৎ নিয়মিত জনসমাবেশ।'
+                        :'On Arba‘in, the fortieth day after Ashura, vast numbers of pilgrims walk to Karbala — one of the largest regular gatherings of people anywhere in the world.'}</p>
+                </div>
                 ${majalis.map(m=>`
                 <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-2xl p-5" style="border-left:4px solid #dc2626">
                     <div class="flex items-center gap-3 mb-2 flex-wrap">
@@ -1182,6 +1738,17 @@ function renderMuharramPage() {
                     <p class="text-sm ${d?'text-gray-300':'text-gray-700'}">${l==='bn'?'হে কারবালার শহীদগণ, আপনাদের প্রতি শান্তি বর্ষিত হোক':'Peace be upon you, O martyrs of Karbala'}</p>
                 </div>
 
+                <!-- v254: "Those who stood with him" — from the site's Karbala source text -->
+                <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-2xl p-5 space-y-3" style="border-left:4px solid #dc2626">
+                    <h4 class="font-bold">${l==='bn'?'যাঁরা তাঁর পাশে দাঁড়িয়েছিলেন':'Those who stood with him'}</h4>
+                    <p class="text-sm ${d?'text-gray-300':'text-gray-700'} leading-relaxed">${l==='bn'
+                        ?'শহীদদের মধ্যে ছিলেন তাঁর বৈমাত্রেয় ভাই আব্বাস ইবনে আলী (আ.) — পতাকাবাহী, যিনি নদী থেকে পানি আনার চেষ্টার সময় শহীদ হন; তাঁর পুত্র আলী আকবর; তাঁর শিশুপুত্র আব্দুল্লাহ, যিনি আলী আসগর নামে বেশি পরিচিত; তাঁর ভাতিজা আল-কাসিম ইবনে হাসান; এবং সঙ্গীদের মধ্যে প্রবীণ হাবিব ইবনে মাযাহির ও মুসলিম ইবনে আওসাজা। শহীদের সংখ্যা সাধারণত বাহাত্তর বলা হয়।'
+                        :'Among the martyrs were his half-brother Abbas ibn Ali, the standard-bearer, killed while trying to bring water from the river; his son Ali al-Akbar; his infant son Abd Allah, widely known as Ali al-Asghar; his nephew al-Qasim ibn al-Hasan; and companions such as the elderly Habib ibn Mazahir and Muslim ibn Awsaja. The number of martyrs is commonly given as seventy-two.'}</p>
+                    <p class="text-sm ${d?'text-gray-300':'text-gray-700'} leading-relaxed">${l==='bn'
+                        ?'তাঁর বোন সাইয়্যিদা যয়নাব বিনতে আলী (আ.) বন্দিদশায় জীবিতদের নেতৃত্ব দেন। কুফায় এবং দামেস্কে ইয়াজিদের সামনে তাঁর ভাষণ ঐতিহাসিক সূত্রে সংরক্ষিত আছে; এগুলোর কারণে কারবালার সত্য চাপা দেওয়া যায়নি।'
+                        :'His sister Sayyida Zaynab bint Ali led the survivors through captivity. Her addresses in Kufa and before Yazid in Damascus, preserved in historical sources, ensured that the truth of Karbala could not be buried.'}</p>
+                </div>
+
                 <!-- বনি হাশিম শহীদ -->
                 <div class="rounded-2xl overflow-hidden border ${d?'border-red-900':'border-red-200'}">
                     <div style="background:linear-gradient(135deg,#7f1d1d,#991b1b);padding:12px 18px" class="flex items-center gap-3">
@@ -1192,7 +1759,7 @@ function renderMuharramPage() {
                         </div>
                     </div>
                     <div class="p-4">
-                        <div class="grid grid-cols-1 gap-2">
+                        <div class="mh-mgrid" role="list">
                         ${[
                             {n:l==='bn'?'১. ইমাম হোসাইন ইবনে আলী (আ.)':'1. Imam Husayn ibn Ali (AS)', a:'الحسين بن علي', t:l==='bn'?'সাইয়্যিদুশ শুহাদা, ইমাম':'Sayyid al-Shuhada, Imam'},
                             {n:l==='bn'?'২. আলী আকবর ইবনে হোসাইন (আ.)':'2. Ali Akbar ibn Husayn (AS)', a:'علي الأكبر', t:l==='bn'?'ইমামের পুত্র, যৌবনের শহীদ':'Son of Imam, martyr of youth'},
@@ -1212,15 +1779,7 @@ function renderMuharramPage() {
                             {n:l==='bn'?'১৬. আব্দুর রহমান ইবনে আকিল':'16. Abd al-Rahman ibn Aqil', a:'عبد الرحمن بن عقيل', t:l==='bn'?'বনি আকিলের শহীদ':'Martyr of Bani Aqil'},
                             {n:l==='bn'?'১৭. মুহাম্মদ ইবনে আবি সাঈদ ইবনে আকিল':'17. Muhammad ibn Abi Said ibn Aqil', a:'محمد بن أبي سعيد بن عقيل', t:l==='bn'?'বনি আকিলের শহীদ':'Martyr of Bani Aqil'},
                             {n:l==='bn'?'১৮. আব্দুল্লাহ ইবনে আকিল':'18. Abdullah ibn Aqil', a:'عبد الله بن عقيل', t:l==='bn'?'বনি আকিলের শহীদ':'Martyr of Bani Aqil'},
-                        ].map(m=>`
-                        <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-xl px-4 py-2.5 flex items-start gap-3">
-                            <span style="color:#dc2626;font-size:1rem;flex-shrink:0;margin-top:2px">🌹</span>
-                            <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-sm">${m.n}</div>
-                                <div class="arabic-text text-xs mt-0.5" dir="rtl" style="color:${d?'#fca5a5':'#991b1b'}">${m.a}</div>
-                                <div class="text-xs ${d?'text-gray-400':'text-gray-500'} mt-0.5">${m.t}</div>
-                            </div>
-                        </div>`).join('')}
+                        ].map((m,i)=>mhMartyrCardHtml(m, 0+i, d)).join('')}
                         </div>
                     </div>
                 </div>
@@ -1235,13 +1794,13 @@ function renderMuharramPage() {
                         </div>
                     </div>
                     <div class="p-4">
-                        <div class="grid grid-cols-1 gap-2">
+                        <div class="mh-mgrid" role="list">
                         ${[
                             {n:l==='bn'?'১৯. হাবিব ইবনে মাযাহির আল-আসাদি':'19. Habib ibn Mazahir al-Asadi', a:'حبيب بن مظاهر الأسدي', t:l==='bn'?'ইমামের বিশ্বস্ত প্রবীণ সঙ্গী':'Trusted senior companion of the Imam'},
-                            {n:l==='bn'?'২০. মুসলিম ইবনে আওসাজা আল-আসাদি':'20. Muslim ibn Awsaja al-Asadi', a:'مسلم بن عوسجة الأسدي', t:l==='bn'?'প্রথম সারির শহীদ':'First to fall in battle'},
+                            {n:l==='bn'?'২০. মুসলিম ইবনে আওসাজা আল-আসাদি':'20. Muslim ibn Awsaja al-Asadi', a:'مسلم بن عوسجة الأسدي', t:l==='bn'?'ইমামের সঙ্গী':'Companion of the Imam'},
                             {n:l==='bn'?'২১. হুর ইবনে ইয়াযিদ আর-রিয়াহি':'21. Hurr ibn Yazid al-Riyahi', a:'الحر بن يزيد الرياحي', t:l==='bn'?'তওবা করে ইমামের পক্ষে শহীদ':'Repented and martyred for the Imam'},
                             {n:l==='bn'?'২২. যুহাইর ইবনে কাইন আল-বাজালি':'22. Zuhayr ibn Qayn al-Bajali', a:'زهير بن القين البجلي', t:l==='bn'?'পথে ইমামের সঙ্গী হন':'Joined the Imam en route'},
-                            {n:l==='bn'?'২৩. বুরাইর ইবনে হুযাইর আল-হামদানি':'23. Burayr ibn Khudayr al-Hamdani', a:'بريرة بن خضير الهمداني', t:l==='bn'?'কুরআনের বিশেষজ্ঞ':'Quranic scholar'},
+                            {n:l==='bn'?'২৩. বুরাইর ইবনে হুযাইর আল-হামদানি':'23. Burayr ibn Khudayr al-Hamdani', a:'بُرَيْر بن خُضَيْر الهمداني', t:l==='bn'?'কুরআনের বিশেষজ্ঞ':'Quranic scholar'},
                             {n:l==='bn'?'২৪. নাফি ইবনে হিলাল আল-জামালি':'24. Nafi ibn Hilal al-Jamali', a:'نافع بن هلال الجملي', t:l==='bn'?'বীর তীরন্দাজ':'Brave archer'},
                             {n:l==='bn'?'২৫. আনাস ইবনে কাহিল আল-আসাদি':'25. Anas ibn Kahil al-Asadi', a:'أنس بن كاهل الأسدي', t:l==='bn'?'বীর সঙ্গী':'Brave companion'},
                             {n:l==='bn'?'২৬. কাইস ইবনে মুসাহহার আস-সাইদাউয়ি':'26. Qays ibn Musahhar al-Saydawi', a:'قيس بن مسهر الصيداوي', t:l==='bn'?'ইমামের দূত, কুফায় শহীদ':'Imam\'s messenger, martyred in Kufa'},
@@ -1291,15 +1850,7 @@ function renderMuharramPage() {
                             {n:l==='bn'?'৭০. সাইফ ইবনে মালিক আল-নামিরি':'70. Sayf ibn Malik al-Namiri', a:'سيف بن مالك النمري', t:l==='bn'?'বীর সঙ্গী':'Brave companion'},
                             {n:l==='bn'?'৭১. বাশির ইবনে আমর আল-হাযরামি':'71. Bashir ibn Amr al-Hadrami', a:'بشير بن عمرو الحضرمي', t:l==='bn'?'বীর সঙ্গী':'Brave companion'},
                             {n:l==='bn'?'৭২. শাবিব মাওলা আল-হারিস আল-জাবালি':'72. Shabib, mawla al-Harith al-Jabali', a:'شبيب مولى الحارث الجبلي', t:l==='bn'?'শেষ শহীদদের একজন':'Among the last to be martyred'},
-                        ].map(m=>`
-                        <div class="${d?'bg-gray-800 border-gray-700':'bg-white border-gray-100'} border rounded-xl px-4 py-2.5 flex items-start gap-3">
-                            <span style="color:#dc2626;font-size:1rem;flex-shrink:0;margin-top:2px">🩸</span>
-                            <div class="flex-1 min-w-0">
-                                <div class="font-semibold text-sm">${m.n}</div>
-                                <div class="arabic-text text-xs mt-0.5" dir="rtl" style="color:${d?'#fca5a5':'#991b1b'}">${m.a}</div>
-                                <div class="text-xs ${d?'text-gray-400':'text-gray-500'} mt-0.5">${m.t}</div>
-                            </div>
-                        </div>`).join('')}
+                        ].map((m,i)=>mhMartyrCardHtml(m, 18+i, d)).join('')}
                         </div>
                     </div>
                 </div>
