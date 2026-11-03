@@ -1527,5 +1527,30 @@
     "meaningBn": "সুতরাং তোমাদের মধ্যে যে অসুস্থ বা মুসাফির, সে অন্য দিনগুলোতে গণনা পূরণ করবে। আল্লাহ তোমাদের জন্য সহজ চান, কঠিন চান না।",
     "meaningEn": "So whoever among you is ill or on a journey [during Ramadan may fast] an equal number of days [after Ramadan]. Allah intends for you ease and does not intend for you hardship.",
     "source": "কুরআন, সূরা আল-বাকারা ২:১৮৫"
+  },
+  {
+    "id": "dua-eid-takbir",
+    "slug": "dua-eid-takbir",
+    "titleBn": "ঈদের তাকবির",
+    "titleEn": "The Eid Takbir",
+    "category": "ramadan",
+    "arabic": "اللَّهُ أَكْبَرُ، اللَّهُ أَكْبَرُ، لَا إِلَٰهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ، اللَّهُ أَكْبَرُ، وَلِلَّهِ الْحَمْدُ",
+    "meaningBn": "আল্লাহ মহান, আল্লাহ মহান, আল্লাহ ব্যতীত কোনো উপাস্য নেই, আল্লাহ মহান, আল্লাহ মহান, এবং সমস্ত প্রশংসা আল্লাহর জন্য।",
+    "meaningEn": "Allah is the Greatest, Allah is the Greatest, there is no deity but Allah, Allah is the Greatest, Allah is the Greatest, and to Allah belongs all praise.",
+    "source": "ঈদুল ফিতর ও ঈদুল আজহার তাকবির, ইসলামি ঐতিহ্যে সর্বজনস্বীকৃত",
+    "alsoCategories": [
+      "hajj-umrah"
+    ]
+  },
+  {
+    "id": "dua-quran-laylatul-qadr-verse",
+    "slug": "dua-quran-laylatul-qadr-verse",
+    "titleBn": "লাইলাতুল কদরের মর্যাদার আয়াত",
+    "titleEn": "The Verse on the Merit of the Night of Decree",
+    "category": "ramadan",
+    "arabic": "إِنَّا أَنزَلْنَاهُ فِي لَيْلَةِ الْقَدْرِ ... لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ",
+    "meaningBn": "নিশ্চয় আমি এটি (কুরআন) লাইলাতুল কদরে নাযিল করেছি... লাইলাতুল কদর হাজার মাস অপেক্ষা উত্তম।",
+    "meaningEn": "Indeed, We sent the Quran down during the Night of Decree... The Night of Decree is better than a thousand months.",
+    "source": "কুরআন, সূরা আল-কদর ৯৭:১,৩"
   }
 ]
