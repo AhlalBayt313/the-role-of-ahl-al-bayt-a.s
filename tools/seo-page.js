@@ -53,7 +53,7 @@ const jsonLd = obj => JSON.stringify(obj).replace(/</g, '\\u003c');
 // category slug -> Bengali label (mirrors dzxDuaCatFilters / dzxZiyaratCatFilters / dzxAmalCatFilters in
 // assets/js/core/script-3-pages.js; the builders report any slug that is missing here)
 const DUA_CATS = [
-    ['morning', 'সকাল'], ['night', 'রাত'], ['hardship', 'বিপদে'], ['gratitude', 'কৃতজ্ঞতা'], ['daily', 'দৈনন্দিন'],
+    ['morning', 'সকাল'], ['night', 'রাত'], ['takibat', 'তাকিবাত'], ['hardship', 'বিপদে'], ['gratitude', 'কৃতজ্ঞতা'], ['daily', 'দৈনন্দিন'],
     ['special-days', 'সাপ্তাহিক'], ['ramadan', 'রমজান'], ['family', 'পরিবার'], ['forgiveness', 'ক্ষমা'],
     ['ahlul-bayt', 'আহলুল বাইত'], ['hajj-umrah', 'হজ্জ-উমরাহ'], ['healing', 'আরোগ্য'], ['knowledge', 'জ্ঞান'],
     ['patience', 'ধৈর্য'], ['protection', 'সুরক্ষা'], ['quranic', 'কুরআনিক'], ['rizq', 'রিযিক'],

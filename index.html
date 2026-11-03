@@ -469,12 +469,16 @@ setTimeout(function(){var s=document.getElementById('splash-screen');if(s){if(wi
 <script src="assets/js/core/dua-playlist.js"></script>
 <!-- v207: per-post share links + ?page=readPost&id= deep links. After script-4-boot.js: it overrides the currentPage init() took from the URL. -->
 <script src="assets/js/core/share-links.js"></script>
+<script src="assets/js/core/share-card.js"></script>
+<script src="assets/js/core/muharram-plus.js"></script>
 <!-- v224: per-item share links (d/<id>.html) + ?open=<type>:<id> deep links for Dua / Ziyarat / Amal. After share-links.js. -->
 <script src="assets/js/core/content-links.js"></script>
 <!-- v228: usage stats (device only) + Diagnostics page (?page=diagnostics) + Backup helpers. Wraps render(), so it must load BEFORE browser-history.js. -->
 <script src="assets/js/core/diagnostics.js"></script>
 <!-- v231: crawlable footer links to p/ and d/ (wraps render()); must load BEFORE browser-history.js. -->
 <script src="assets/js/core/footer-seo-links.js"></script>
+<!-- v251: "Share the app" (drawer + footer), Android APK link, and no "Install App" buttons inside the APK (wraps render() + isPWAInstalled). After script-4-boot.js, BEFORE browser-history.js. -->
+<script src="assets/js/core/apk-app.js"></script>
 <!-- v230: per-view document.title (wraps render()); must load BEFORE browser-history.js so history entries get the right title. -->
 <script src="assets/js/core/page-titles.js"></script>
 <!-- v227: browser Back/Forward (history.pushState/popstate) for every page, detail page, the menu and the person modal. Must load LAST among the scripts that wrap or call render() — it wraps the final render(). -->
