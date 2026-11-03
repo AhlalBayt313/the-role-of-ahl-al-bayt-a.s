@@ -6538,3 +6538,467 @@ p.text-xs[style*="rgba(255,255,255,.28)"],
 button[data-action="showAdminLogin"][style*="rgba(255,255,255,.28)"] { color: rgba(255,255,255,.62) !important; }   /* footer © line + admin link on the dark footer, 2.5:1 */
 div[style*="grid-template-columns:1fr 1fr;gap:10px"] > div:nth-child(1) > p[style*="font-size:9.5px"] { color: rgba(30,58,138,.92) !important; }
 div[style*="grid-template-columns:1fr 1fr;gap:10px"] > div:nth-child(2) > p[style*="font-size:9.5px"] { color: rgba(154,52,18,.92) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   v245 — MOBILE AUDIT, ROUND 3 (CSS only; delete this block to revert)
+   One invisible, centred hit area per control: it is never smaller than 44x44 but
+   also never larger than the control needs (max(100%, 44px)), so the look is unchanged.
+   Covers: imam coverflow nav/dots, Hijri-adjust buttons, prayer week day-buttons,
+   share-quote buttons, social links, Dua/Blog/Tasbeeh/Calendar/Khums pills and the
+   blog "আরও পড়ুন" button. Footer link lists get a real 44px row height instead
+   (a hit area bigger than the 20px row would overlap its neighbours).
+   ══════════════════════════════════════════════════════════════════════════ */
+.imam-coverflow-nav-btn, .imam-coverflow-dot, .hj-adj-btn, .pt-day,
+a[target="_blank"][style*="width:40px;height:40px"],
+button[data-action="shareImamQuote"], button[data-action="setDuaCategory"],
+button[data-action="setBlogFilter"], button[data-action="selectTasbeeh"],
+button[data-action="readPost"], button[data-action="changePage"].mt-2.text-xs,
+.cal-tog, .kz-tab, .mhtb, .kcx-chip, .kcx-more { position: relative; }
+.imam-coverflow-nav-btn::after, .hj-adj-btn::after, .pt-day::after,
+a[target="_blank"][style*="width:40px;height:40px"]::after,
+button[data-action="shareImamQuote"]::after, button[data-action="setDuaCategory"]::after,
+button[data-action="setBlogFilter"]::after, button[data-action="selectTasbeeh"]::after,
+button[data-action="readPost"]::after, button[data-action="changePage"].mt-2.text-xs::after,
+.cal-tog::after, .kz-tab::after, .mhtb::after, .kcx-chip::after, .kcx-more::after {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: max(100%, 44px); height: max(100%, 44px);
+}
+/* the 8px coverflow dots sit 6px apart: 44px tall, but only as wide as dot + gap so neighbours never overlap */
+.imam-coverflow-dot::after {
+    content: ''; position: absolute; left: -3px; right: -3px; top: 50%; height: 44px; transform: translateY(-50%);
+}
+/* the 7 prayer day-buttons share a 7-column grid: keep each at its own column width */
+.pt-day::after { width: calc(100% + 5px); }
+/* footer link lists: 20px rows -> 44px */
+footer button.text-left.text-sm, footer a.text-left.text-sm { display: flex; align-items: center; min-height: 44px; }
+/* v245 (cont.) — the long tail found by the full scan: pills, prev/next/share rows, play buttons, quiz options, footer links */
+.pr-pill, .kz-btn, .qf-mini, .kcx-link, .kcx-note-link, .tts-play-btn, .quiz-option,
+button[data-action="hadithPrev"], button[data-action="hadithNext"], button[data-action="shareHadith"],
+button[data-action="ayahPrev"], button[data-action="ayahNext"], button[data-action="shareAyah"],
+button[data-action="toggleDuaCatExpanded"], button[data-action="resetTasbeeh"], button[data-action="saveTasbeehHistory"],
+button[onclick^="(function(){if(typeof imam"], footer a.flex.items-center { position: relative; }
+.pr-pill::after, .kz-btn::after, .qf-mini::after, .kcx-link::after, .kcx-note-link::after, .tts-play-btn::after, .quiz-option::after,
+button[data-action="hadithPrev"]::after, button[data-action="hadithNext"]::after, button[data-action="shareHadith"]::after,
+button[data-action="ayahPrev"]::after, button[data-action="ayahNext"]::after, button[data-action="shareAyah"]::after,
+button[data-action="toggleDuaCatExpanded"]::after, button[data-action="resetTasbeeh"]::after, button[data-action="saveTasbeehHistory"]::after,
+button[onclick^="(function(){if(typeof imam"]::after, footer a.flex.items-center::after {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: max(100%, 44px); height: max(100%, 44px);
+}
+/* v245 (cont. 2) */
+button[data-action="showAdminLogin"], button[data-action="toggleTimeline"], button[data-action="changePage"].flex.items-center,
+button[onclick^="shareImamQuote("], a.flex.items-center[href^="http"] { position: relative; }
+button[data-action="showAdminLogin"]::after, button[data-action="toggleTimeline"]::after, button[data-action="changePage"].flex.items-center::after,
+button[onclick^="shareImamQuote("]::after, a.flex.items-center[href^="http"]::after {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: max(100%, 44px); height: max(100%, 44px);
+}
+.quiz-switch { position: relative; }
+.quiz-switch::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+/* v245 (cont. 3) — imam "বিস্তারিত" button: its ::after is the shine effect, so the hit area uses ::before */
+.imam-detail-btn { position: relative; }
+.imam-detail-btn::before { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%; height: max(100%, 44px); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   v246 — small-text CONTRAST, rest of the list (colours only; delete this block to revert)
+   Measured on the real background; targets 4.5:1 for text under 18px.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* light mode: inline grey-500 / emerald / blue / amber small text one step darker */
+html:not([data-theme="dark"]) [style*="color:#6b7280"] { color: #4b5563 !important; }
+html:not([data-theme="dark"]) .quiz-cat-card-label, html:not([data-theme="dark"]) .quiz-cat-card-count { color: #4b5563 !important; }
+html:not([data-theme="dark"]) .text-xs[style*="color:#059669"], html:not([data-theme="dark"]) .kz-unit,
+html:not([data-theme="dark"]) button[data-action="saveTasbeehHistory"] { color: #047857 !important; }
+html:not([data-theme="dark"]) .text-xs[style*="color:#3b82f6"] { color: #1d4ed8 !important; }
+html:not([data-theme="dark"]) .text-xs[style*="color:#b45309"] { color: #92400e !important; }
+html:not([data-theme="dark"]) .hb-next-pill[style*="#b91c1c"] { color: #991b1b !important; }
+/* dark mode: same small text one step lighter */
+html[data-theme="dark"] .text-xs[style*="color:#6b7280"], html[data-theme="dark"] .text-xs.mt-1[style*="#6b7280"] { color: #9ca3af !important; }
+html[data-theme="dark"] .quiz-cat-card-label, html[data-theme="dark"] .quiz-cat-card-count { color: #9ca3af !important; }
+html[data-theme="dark"] .text-xs[style*="color:#059669"] { color: #34d399 !important; }
+html[data-theme="dark"] .text-xs[style*="color:#3b82f6"] { color: #93c5fd !important; }
+html[data-theme="dark"] .text-xs[style*="color:#b45309"] { color: #fbbf24 !important; }
+html[data-theme="dark"] .text-xs[style*="color:#7c3aed"] { color: #c4b5fd !important; }
+html[data-theme="dark"] button[data-action="saveTasbeehHistory"] { color: #34d399 !important; }
+/* white text on a category-coloured active pill: darken the pill background only (overlay), text unchanged */
+button[data-action="setDuaCategory"][aria-pressed="true"],
+button[data-action="setBlogFilter"][style*="color:#fff"],
+button[data-action="setBlogFilter"][style*="color:white"] {
+    background-image: linear-gradient(rgba(0,0,0,.2), rgba(0,0,0,.2)) !important;
+}
+/* v246 (cont.) */
+button[data-action="setDuaTab"] > span { opacity: .95 !important; }   /* tab counts 347 / 59 / 16: .75 -> .95 */
+html:not([data-theme="dark"]) [style*="color:#64748b"].text-xs, html:not([data-theme="dark"]) div[style*="color:#64748b"] { color: #475569 !important; }
+html:not([data-theme="dark"]) .dzx-sort { color: #4b5563 !important; }
+html[data-theme="dark"] button[onclick*="requestGPSPrayerTimes"] { color: #d1d5db !important; }
+p.text-xs[style*="rgba(52,211,153,.75)"] { color: rgba(110,231,183,.95) !important; }
+html[data-theme="dark"] .text-xs.text-gray-500, html[data-theme="dark"] p.text-xs.mt-1.text-gray-500 { color: #9ca3af !important; }
+/* Muharram date badges (colour on its own 13% tint) */
+html:not([data-theme="dark"]) .rounded-full.text-xs[style*="color:#f59e0b"] { color: #92400e !important; }
+html:not([data-theme="dark"]) .rounded-full.text-xs[style*="color:#ef4444"] { color: #b91c1c !important; }
+html:not([data-theme="dark"]) .rounded-full.text-xs[style*="color:#10b981"] { color: #047857 !important; }
+html:not([data-theme="dark"]) .rounded-full.text-xs[style*="color:#8b5cf6"] { color: #6d28d9 !important; }
+html[data-theme="dark"] .rounded-full.text-xs[style*="color:#ef4444"] { color: #fca5a5 !important; }
+html[data-theme="dark"] .rounded-full.text-xs[style*="color:#8b5cf6"] { color: #c4b5fd !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   v247 — very narrow phones (<=359px): the 7-day prayer strip and the 5 prayer cells are narrower
+   than 44px per button. The strip wraps to 4 + 3 (each day ~60px wide, order unchanged);
+   the 5 cells keep their layout and get the same invisible 44px hit area. CSS only; delete to revert.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 359px) {
+    .pt-strip { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .pt-cell { position: relative; }
+    .pt-cell::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+}
+
+/* v247 (cont.) — pages the earlier scans missed: Amal/Ziyarat reader, search, bookmarks, contact, playlists, Ramadan, family tree */
+.dzx-tb-btn, .kc-act-icon, button[onclick*="state.searchQuery"], .pl-link, button[data-action="setBookmarksTab"], .rl-chip,
+a[href^="mailto:"].hover\:underline, a[href^="tel:"].hover\:underline { position: relative; }
+a[href^="mailto:"].hover\:underline, a[href^="tel:"].hover\:underline { display: inline-block; }
+.dzx-tb-btn::after, .kc-act-icon::after, button[onclick*="state.searchQuery"]::after, .pl-link::after, button[data-action="setBookmarksTab"]::after, .rl-chip::after,
+a[href^="mailto:"].hover\:underline::after, a[href^="tel:"].hover\:underline::after {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px);
+}
+/* text: sizes */
+.fatima-role, .imam-order { font-size: .6875rem; }
+span[style*="position:absolute"][style*="width:22px;height:22px"] { font-size: .6875rem !important; }
+/* text: colours (white on the light end of the violet gradient was 1.8:1; violet / emerald small text on its own tint 3.2-4.4:1) */
+span[style*="#7c3aed,#a78bfa"] { background: linear-gradient(135deg,#6d28d9,#7c3aed) !important; }
+html:not([data-theme="dark"]) span.text-xs[style*="color:#7c3aed"] { color: #6d28d9 !important; }
+html:not([data-theme="dark"]) button[onclick*="state.searchQuery"], html:not([data-theme="dark"]) .pl-link { color: #047857 !important; }
+html[data-theme="dark"] button[onclick*="state.searchQuery"], html[data-theme="dark"] .pl-link { color: #34d399 !important; }
+html:not([data-theme="dark"]) .ab-cnt { color: #065f46 !important; }
+/* v247 (cont. 2) */
+.pl-add-pill, .rp-chip { position: relative; }
+.pl-add-pill::after, .rp-chip::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+.fatima-role, .imam-order { font-size: .6875rem !important; }
+html:not([data-theme="dark"]) [style*="color:#9ca3af"] { color: #6b7280 !important; }   /* grey-400 on white = 2.5:1 -> grey-500 4.8:1 */
+html:not([data-theme="dark"]) .dzx-tb-level { color: #4b5563 !important; }
+/* dark mode: Amal chip used the light-mode violet (#6d28d9) on a dark card: 2.0:1 */
+html[data-theme="dark"] span[style*="background:rgba(167,139,250"][style*="color:#6d28d9"] { color: #c4b5fd !important; }
+/* Ramadan: 30 day chips (40x40) + night chips (40 high) */
+.rp-dchip, .qw-chip { position: relative; }
+.rp-dchip::after, .qw-chip::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+
+/* v248 — Playlists note: the whole note (incl. the "ডেটা ব্যাকআপ" link inside) sat at opacity .7 -> link was 3.0:1 */
+.pl-note { opacity: .92; }
+html:not([data-theme="dark"]) .pl-link { color: #065f46 !important; }
+
+/* ==========================================================================
+   v253 — MOBILE AUDIT ROUND 5 (was built as "v249" on v248) (CSS only, additive; delete this block to revert)
+   Popups/overlays, dark-mode text colours, small fonts, hit areas.
+   Not included on purpose: the A+ (xlarge) setting only changes body font-size
+   (most text uses fixed rem/px), making it really scale is a behaviour change.
+   ========================================================================== */
+
+/* 1. Overlay backdrops: .bg-black is opaque in the compiled CSS and .bg-opacity-60 is a dead Tailwind-3 util
+      (bg-opacity-70 does not exist) -> admin login + blog editor covered the whole page in solid black */
+.bg-black.bg-opacity-60 { background-color: rgba(0, 0, 0, .6); }
+.bg-black.bg-opacity-70 { background-color: rgba(0, 0, 0, .7); }
+
+/* 2. Hit areas — invisible centred 44px area, the look stays the same */
+[data-action="closeAdminLogin"], [data-action="closeBlogEditor"], #mobile-menu-drawer [data-action="toggleMenu"],
+#mobile-menu-drawer [data-action="adminLogout"], #mobile-menu-drawer button.bg-purple-100[data-action="changePage"],
+[data-action="openHadithEditor"], [data-action="openAyahEditor"], [data-action="openDuaEditor"], [data-action="openQuizEditor"],
+[data-action="openMuharramEditor"], [data-action="openShiaDayEditor"], button[data-action="changePage"]:not([class]),
+.dg-chip, .pt-calc > summary { position: relative; }
+[data-action="closeAdminLogin"]::after, [data-action="closeBlogEditor"]::after, #mobile-menu-drawer [data-action="toggleMenu"]::after,
+#mobile-menu-drawer [data-action="adminLogout"]::after, #mobile-menu-drawer button.bg-purple-100[data-action="changePage"]::after,
+[data-action="openHadithEditor"]::after, [data-action="openAyahEditor"]::after, [data-action="openDuaEditor"]::after, [data-action="openQuizEditor"]::after,
+[data-action="openMuharramEditor"]::after, [data-action="openShiaDayEditor"]::after, button[data-action="changePage"]:not([class])::after,
+.dg-chip::after, .pt-calc > summary::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+/* text clipped by 4px inside fixed-height buttons */
+.imam-detail-btn, .quiz-option { min-height: 44px; overflow: visible; }
+
+/* 3. Tiny text -> 11px */
+.mahdi-tag, .admin-badge, span[style*="font-size:10px"], span[style*="font-size:10.5px"], div[style*="font-size:10px"] { font-size: 11px !important; }
+
+/* 4. Overlay text colours (light mode) */
+html:not([data-theme="dark"]) [role="dialog"] .bg-green-600.text-white { background-color: #047857; }
+html:not([data-theme="dark"]) [role="dialog"] p.text-xs.text-center { color: #6b7280; }
+html:not([data-theme="dark"]) [role="dialog"] .text-red-500 { color: #dc2626; }
+
+/* 5. Dark mode — dark palette colours used inline on dark cards (Asmaul Husna numbers/names, imam epithet/avatar/chips) */
+html[data-theme="dark"] .asma-card [style*="color:#059669"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#059669"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#059669"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#059669"] { color: #34d399 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#0d9488"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#0d9488"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#0d9488"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#0d9488"] { color: #5eead4 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#be123c"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#be123c"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#be123c"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#be123c"] { color: #fda4af !important; }
+html[data-theme="dark"] .asma-card [style*="color:#7c3aed"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#7c3aed"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#7c3aed"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#7c3aed"] { color: #c4b5fd !important; }
+html[data-theme="dark"] .asma-card [style*="color:#0369a1"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#0369a1"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#0369a1"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#0369a1"] { color: #7dd3fc !important; }
+html[data-theme="dark"] .asma-card [style*="color:#d97706"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#d97706"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#d97706"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#d97706"] { color: #fbbf24 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#166534"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#166534"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#166534"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#166534"] { color: #86efac !important; }
+html[data-theme="dark"] .asma-card [style*="color:#0e7490"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#0e7490"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#0e7490"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#0e7490"] { color: #67e8f9 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#4f46e5"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#4f46e5"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#4f46e5"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#4f46e5"] { color: #a5b4fc !important; }
+html[data-theme="dark"] .asma-card [style*="color:#0f766e"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#0f766e"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#0f766e"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#0f766e"] { color: #5eead4 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#be185d"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#be185d"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#be185d"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#be185d"] { color: #f9a8d4 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#dc2626"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#dc2626"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#dc2626"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#dc2626"] { color: #fca5a5 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#b45309"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#b45309"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#b45309"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#b45309"] { color: #fbbf24 !important; }
+html[data-theme="dark"] .asma-card [style*="color:#065f46"],
+html[data-theme="dark"] .imam-epithet-badge[style*="color:#065f46"],
+html[data-theme="dark"] .imam-avatar-inner-wrap [style*="color:#065f46"],
+html[data-theme="dark"] button[onclick*="imamCoverflowGoTo"][style*="color:#065f46"] { color: #6ee7b7 !important; }
+
+/* 6. Dark mode — single elements */
+html[data-theme="dark"] .feature-card-link { color: #6ee7b7 !important; }
+html[data-theme="dark"] .tts-play-btn { color: #fbbf24 !important; }
+
+/* v253 — new "🖼️ কার্ড" buttons beside the home Share buttons: same 44px invisible hit area as their neighbours */
+[data-sc-act] { position: relative; }
+[data-sc-act]::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100%, 44px); height: max(100%, 44px); }
+
+
+/* v254: calendar page layout — "today" card beside the month grid (wide screens) + occasions-of-the-year grid */
+.cal-layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.cal-main { min-width: 0; }
+@media (min-width: 1024px) { .cal-layout { grid-template-columns: 300px minmax(0, 1fr); align-items: start; } }
+.cal-year-grid { display: grid; gap: 20px 24px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .cal-year-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .cal-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cal-yrow { display: flex; align-items: flex-start; gap: 8px; width: 100%; min-height: 44px; padding: 8px 6px; text-align: left; background: none; border: 0; border-top: 1px solid var(--cal-y-bd, #e2e8f0); cursor: pointer; font-size: 14px; line-height: 1.4; -webkit-tap-highlight-color: transparent; }
+.cal-yrow:focus-visible { outline: 2px solid #059669; outline-offset: -2px; }
+.cal-ydot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+.cal-yday { flex: 0 0 1.6em; font-size: 12px; font-weight: 700; margin-top: 1px; }
+.cal-yname { flex: 1; min-width: 0; font-weight: 600; }
+
+/* v254: compact "today" card — centred stack on wide screens, number-beside-text strip on phones */
+.cal-today-card { padding: 20px; text-align: left; }
+.cal-today-top { display: grid; text-align: center; grid-template-areas: "wd" "num" "my" "dt"; }
+.cal-t-wd { grid-area: wd; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.cal-t-num { grid-area: num; font-size: 4rem; font-weight: 900; line-height: 1.05; margin: 6px 0 2px; }
+.cal-t-my { grid-area: my; font-size: 1.05rem; font-weight: 800; }
+.cal-t-dt { grid-area: dt; margin-top: 6px; font-size: .85rem; line-height: 1.6; }
+@media (max-width: 1023px) {
+  .cal-today-card { padding: 14px 16px; }
+  .cal-today-top { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "num wd" "num my" "num dt"; column-gap: 16px; align-items: center; text-align: left; }
+  .cal-t-num { font-size: 3rem; margin: 0; }
+  .cal-t-my { font-size: .98rem; }
+  .cal-t-dt { margin-top: 2px; font-size: .8rem; line-height: 1.45; }
+}
+
+/* v254: 72 martyrs — one coloured card each (hue set per card inline via --mh-* variables) */
+.mh-mgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.mh-mcard { position: relative; overflow: hidden; border: 1px solid var(--mh-bd); border-radius: 16px; background: var(--mh-bg); padding: 16px 14px 12px; color: var(--mh-tx); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.mh-mbar { position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--mh-ac); }
+.mh-mhead { display: flex; align-items: flex-start; gap: 10px; }
+.mh-mdot { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: var(--mh-ac); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; }
+.mh-mname { flex: 1; min-width: 0; font-size: .92rem; font-weight: 700; line-height: 1.45; padding-top: 3px; }
+.mh-mar { margin-top: 8px; font-size: 1.05rem; line-height: 1.7; color: var(--mh-ar); }
+.mh-mtag { margin-top: 4px; font-size: .78rem; line-height: 1.45; color: var(--mh-tg); }
+@media (max-width: 560px) {
+  .mh-mgrid { gap: 10px; }
+  .mh-mcard { padding: 13px 12px 10px; }
+  .mh-mdot { width: 24px; height: 24px; font-size: 11px; }
+  .mh-mname { font-size: .88rem; padding-top: 2px; }
+  .mh-mar { margin-top: 4px; font-size: .98rem; line-height: 1.55; }
+  .mh-mtag { margin-top: 2px; font-size: .74rem; }
+}
+
+/* ============================================================================
+   v263 — HOME, mobile-first polish  (hmx- block; additive, every rule is inside a
+   media query or uses a new hmx- class, so the desktop layout is unchanged)
+   ① phones: sidebar widgets are interleaved with the main column (order)
+   ② phones: compact hero + quick-access row
+   ③ <1024px: 5-prayer strip inside the next-prayer banner
+   ④ phones: compact feature cards
+   ============================================================================ */
+
+/* ③ prayer strip (hidden on desktop: the sidebar prayer widget already shows all five) */
+.hmx-ps { margin-top: 12px; }
+.hmx-ps-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); overflow: hidden; }
+.hmx-ps-bar i { display: block; height: 100%; border-radius: 2px; background: #fbbf24; transition: width .6s ease; }
+.hmx-ps-row { display: flex; justify-content: space-between; gap: 4px; margin-top: 10px; }
+.hmx-ps-i { flex: 1; text-align: center; font-size: .72rem; line-height: 1.4; color: rgba(167,243,208,.88); border-radius: 9px; padding: 3px 2px; }
+.hmx-ps-i b { display: block; font-weight: 700; font-size: .76rem; color: #fff; font-variant-numeric: tabular-nums; }
+.hmx-ps-i.is-next { background: #fbbf24; color: #064e3b; }
+.hmx-ps-i.is-next b { color: #022c22; }
+@media (min-width: 64rem) { .hmx-ps { display: none; } }
+
+/* ① order: one column, sidebar widgets become grid items so the daily hadith can rise */
+@media (max-width: 63.99rem) {
+    .home-layout-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .home-main-col, .home-sidebar-col { display: contents; }
+    .home-sidebar-col > * { margin-bottom: 1.25rem; }
+    .home-sidebar-col > #hadith-of-day-widget { order: -1; }
+}
+
+/* quick-access row: phones only */
+.hmx-quick { display: none; }
+@media (max-width: 767px) {
+    .hmx-quick { display: flex; gap: 8px; overflow-x: auto; margin: 0 0 1.5rem; padding: 2px 2px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .hmx-quick::-webkit-scrollbar { display: none; }
+    .hmx-q-item { flex: 1 0 62px; min-width: 62px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; padding: 0; cursor: pointer; }
+    .hmx-q-ic { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+        background: color-mix(in srgb, var(--hq) 14%, transparent); border: 1px solid color-mix(in srgb, var(--hq) 32%, transparent); transition: transform .15s ease; }
+    .hmx-q-item:active .hmx-q-ic { transform: scale(.95); }
+    .hmx-q-lb { font-size: .74rem; font-weight: 700; color: #374151; white-space: nowrap; }
+    html[data-theme="dark"] .hmx-q-lb { color: #e5e7eb; }
+}
+
+/* ② compact hero + banner on phones */
+@media (max-width: 767px) {
+    /* padding-top is deliberately NOT touched: the v203+ hero picture banner reserves it (calc(58.84% + 20px)) */
+    .hmx-hero { min-height: 0 !important; padding-left: 16px !important; padding-right: 16px !important; padding-bottom: 20px !important; margin-bottom: 1rem !important; border-radius: 22px; }
+    .hmx-hero .hero-crescent-badge,
+    .hmx-hero .hero-arabic-sub,
+    .hmx-hero .hero-divider-dots,
+    .hmx-hero .hero-stats-row { display: none !important; }
+    .hmx-hero .hero-bismillah-pill { margin-bottom: .5rem; }
+    .hmx-hero .hmx-hero-title { font-size: 1.65rem !important; margin-bottom: .35rem !important; }
+    .hmx-hero .hmx-hero-tag { margin-bottom: 0 !important; font-size: .84rem !important; line-height: 1.65 !important; }
+    .next-prayer-banner { padding: 14px 16px !important; margin-bottom: 1rem !important; border-radius: 18px; }
+    .next-prayer-banner .next-prayer-time { font-size: 1.9rem; letter-spacing: -.5px; }
+}
+
+/* ④ compact feature cards on phones (the "Explore" pill and hover badge are hidden: touch screens never see hover) */
+@media (max-width: 767px) {
+    .feature-card-luxury { padding: 12px 12px 10px !important; display: flex; flex-direction: column; justify-content: flex-start; }
+    .feature-card-luxury .feature-icon-wrap { width: 40px; height: 40px; border-radius: 12px; font-size: 1.2rem; margin-bottom: 8px; }
+    .feature-card-luxury .feature-card-link,
+    .feature-card-luxury .feature-card-badge { display: none !important; }
+    .feature-card-luxury h3 { font-size: .88rem !important; margin-bottom: 2px !important; }
+    .feature-card-luxury p { font-size: .74rem !important; line-height: 1.45 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}
+
+/* dark mode: the new accents (maroon/olive/teal) are lightened for the text pill so contrast stays readable */
+html[data-theme="dark"] .feature-card-luxury .feature-card-link { color: color-mix(in srgb, var(--fc-accent, #059669) 55%, #ffffff); }
+html[data-theme="dark"] .feature-card-luxury:hover .feature-card-link { color: #fff; }
+
+/* ============================================================================
+   v264 — HOME: phone design on every screen width (additive; v263 rules untouched)
+   The v263 phone rules sit inside max-width media queries. Same rules repeated for
+   wider screens so desktop/tablet show the identical home design. Revert = delete this block.
+   ============================================================================ */
+@media (min-width: 64rem) {
+    .hmx-ps { display: block; }
+    .home-layout-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .home-main-col, .home-sidebar-col { display: contents; }
+    .home-sidebar-col > * { margin-bottom: 1.25rem; }
+    .home-sidebar-col > #hadith-of-day-widget { order: -1; }
+}
+@media (min-width: 768px) {
+    .hmx-quick { display: flex; gap: 8px; overflow-x: auto; margin: 0 0 1.5rem; padding: 2px 2px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .hmx-quick::-webkit-scrollbar { display: none; }
+    .hmx-q-item { flex: 1 0 62px; min-width: 62px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; padding: 0; cursor: pointer; }
+    .hmx-q-ic { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+        background: color-mix(in srgb, var(--hq) 14%, transparent); border: 1px solid color-mix(in srgb, var(--hq) 32%, transparent); transition: transform .15s ease; }
+    .hmx-q-item:active .hmx-q-ic { transform: scale(.95); }
+    .hmx-q-lb { font-size: .74rem; font-weight: 700; color: #374151; white-space: nowrap; }
+    html[data-theme="dark"] .hmx-q-lb { color: #e5e7eb; }
+
+    .hmx-hero { min-height: 0 !important; padding-left: 16px !important; padding-right: 16px !important; padding-bottom: 20px !important; margin-bottom: 1rem !important; border-radius: 22px; }
+    .hmx-hero .hero-crescent-badge,
+    .hmx-hero .hero-arabic-sub,
+    .hmx-hero .hero-divider-dots,
+    .hmx-hero .hero-stats-row { display: none !important; }
+    .hmx-hero .hero-bismillah-pill { margin-bottom: .5rem; }
+    .hmx-hero .hmx-hero-title { font-size: 1.65rem !important; margin-bottom: .35rem !important; }
+    .hmx-hero .hmx-hero-tag { margin-bottom: 0 !important; font-size: .84rem !important; line-height: 1.65 !important; }
+    .next-prayer-banner { padding: 14px 16px !important; margin-bottom: 1rem !important; border-radius: 18px; }
+    .next-prayer-banner .next-prayer-time { font-size: 1.9rem; letter-spacing: -.5px; }
+
+    .feature-card-luxury { padding: 12px 12px 10px !important; display: flex; flex-direction: column; justify-content: flex-start; }
+    .feature-card-luxury .feature-icon-wrap { width: 40px; height: 40px; border-radius: 12px; font-size: 1.2rem; margin-bottom: 8px; }
+    .feature-card-luxury .feature-card-link,
+    .feature-card-luxury .feature-card-badge { display: none !important; }
+    .feature-card-luxury h3 { font-size: .88rem !important; margin-bottom: 2px !important; }
+    .feature-card-luxury p { font-size: .74rem !important; line-height: 1.45 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}
+
+/* ============================================================================
+   v265 — HOME finish (additive; revert = delete this block, plus the 3 quick-access items in script-2-ui.js)
+   ② desktop: home content is centred at ~1080px instead of stretching across the screen
+   ③ hijri card: full width; date on the left, next event on the right (≥768px)
+   ④ gold divider with a diamond above the main content
+   ⑤ prayer banner ↔ hero: gold edge + soft shadow so the two blocks read as one family
+   ⑥ "approximate" note as a compact pill
+   ⑧ next-prayer glow (stopped for prefers-reduced-motion)
+   ============================================================================ */
+@media (min-width: 64rem) {
+    .hmx-hb, #next-prayer-home, .hmx-hero, .hmx-quick, .home-layout-grid { max-width: 67.5rem; margin-left: auto; margin-right: auto; }
+}
+@media (min-width: 768px) {
+    .hmx-hb .hb-strip--wide { flex: 1 1 100%; max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 20px; align-items: center; }
+    .hmx-hb .hb-strip--wide .hb-main, .hmx-hb .hb-strip--wide .hb-sub { grid-column: 1; }
+    .hmx-hb .hb-strip--wide .hb-next { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; padding-top: 0; border-top: 0; padding-left: 20px; border-left: 1px solid rgba(5,150,105,.28); min-width: 260px; }
+}
+.home-layout-grid::before {
+    content: ""; display: block; order: -2; height: 16px; margin: 0 auto 1.25rem; width: 100%; max-width: 420px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 1l5 7-5 7-5-7z' fill='none' stroke='%23c9a227' stroke-width='1.3'/%3E%3Ccircle cx='8' cy='8' r='1.4' fill='%23c9a227'/%3E%3C/svg%3E") center / 16px 16px no-repeat,
+        linear-gradient(90deg, transparent, rgba(201,162,39,.7)) left center / calc(50% - 14px) 1px no-repeat,
+        linear-gradient(270deg, transparent, rgba(201,162,39,.7)) right center / calc(50% - 14px) 1px no-repeat;
+}
+#next-prayer-home { border-color: rgba(201,162,39,.38); box-shadow: 0 1px 0 rgba(201,162,39,.4), 0 14px 26px -16px rgba(2,44,34,.6); }
+.next-prayer-banner .np-note { display: inline-flex; width: fit-content; flex-basis: auto; font-size: 11px; line-height: 1.3; padding: 4px 10px; border-radius: 999px; background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.28); }
+@keyframes hmxGlow { 0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,.5), 0 0 10px rgba(251,191,36,.18); } 50% { box-shadow: 0 0 0 1px rgba(251,191,36,.8), 0 0 20px rgba(251,191,36,.42); } }
+.hmx-ps-i.is-next { animation: hmxGlow 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hmx-ps-i.is-next { animation: none; box-shadow: 0 0 0 1px rgba(251,191,36,.6); } }
+
+/* ============================================================================
+   v266 — own SVG icons, 14 Masumeen name strip, section rhythm (additive; revert = delete this block)
+   ============================================================================ */
+.hmx-ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.feature-icon-wrap { display: flex; align-items: center; justify-content: center; }
+.feature-icon-wrap .hmx-ico { color: var(--fc-accent, #059669); }
+.hmx-q-ic .hmx-ico { width: 24px; height: 24px; color: var(--hq, #059669); }
+html[data-theme="dark"] .feature-icon-wrap .hmx-ico { color: color-mix(in srgb, var(--fc-accent, #059669) 55%, #ffffff); }
+html[data-theme="dark"] .hmx-q-ic .hmx-ico { color: color-mix(in srgb, var(--hq, #059669) 55%, #ffffff); }
+
+/* name strip */
+.hmx-names { position: relative; overflow: hidden; margin: 0 0 1.25rem; padding: 9px 0; border-radius: 14px; direction: ltr;
+    background: linear-gradient(135deg, rgba(5,150,105,.08), rgba(201,162,39,.1)); border: 1px solid rgba(201,162,39,.28);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.hmx-names[hidden] { display: none; }
+.hmx-names-track { display: flex; align-items: center; gap: 14px; width: max-content; animation: hmxNames 90s linear infinite; }
+.hmx-names:hover .hmx-names-track { animation-play-state: paused; }
+.hmx-nm { background: none; border: 0; padding: 4px 2px; cursor: pointer; white-space: nowrap; font-family: 'Amiri', 'Noto Naskh Arabic', serif; font-size: 1.25rem; line-height: 1.6; color: #065f46; }
+html[data-theme="dark"] .hmx-nm { color: #fcd34d; }
+.hmx-nm-dot { color: #c9a227; font-size: .7rem; opacity: .85; }
+@keyframes hmxNames { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+    .hmx-names { overflow-x: auto; -webkit-mask-image: none; mask-image: none; scrollbar-width: none; }
+    .hmx-names-track { animation: none; }
+}
+@media (min-width: 64rem) { .hmx-names { max-width: 67.5rem; margin-left: auto; margin-right: auto; } }
+
+/* section rhythm: one consistent gap between home sections (inline margins on the <section>s are overridden) */
+.home-layout-grid section { margin-bottom: clamp(1.75rem, 4vw, 2.5rem) !important; }
+.home-sidebar-col > * { margin-bottom: clamp(1.25rem, 3vw, 1.75rem); }
