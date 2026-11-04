@@ -1093,7 +1093,7 @@ function renderHeader()
                             :(d?'text-gray-400 hover:text-white hover:bg-white/5 font-medium':'text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium')}
                         ${state.currentPage===page?'active':''}"
                         style="${state.currentPage===page?'font-weight:700':''}"
-                    >${pageIcons[page]??''} ${t(page)}</button>`).join('')}
+                    >${hmxIcon(page,pageIcons[page]??'')} ${t(page)}</button>`).join('')}
 
                     <!-- More dropdown -->
                     <div class="relative" id="more-menu-wrap">
@@ -1119,7 +1119,7 @@ function renderHeader()
                                 ${state.currentPage===page?'aria-current="page"':''}
                                 class="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-all
                                 ${state.currentPage===page?(d?'bg-emerald-900/50 text-emerald-300 font-semibold':'bg-emerald-50 text-emerald-700 font-semibold'):(d?'text-gray-300 hover:bg-white/5':'text-gray-700 hover:bg-gray-50')}"
-                            ><span style="font-size:.95rem" aria-hidden="true">${pageIcons[page]??'📄'}</span>${t(page)}</button>`).join('')}
+                            ><span style="font-size:.95rem" aria-hidden="true">${hmxIcon(page,pageIcons[page]??'📄')}</span>${t(page)}</button>`).join('')}
                         </div>
                     </div>
                 </nav>
@@ -1237,7 +1237,7 @@ function renderMobileMenu()
                         ? 'background:linear-gradient(135deg,rgba(5,150,105,.18),rgba(5,150,105,.08));color:#059669;border:1.5px solid rgba(5,150,105,.22);font-weight:700'
                         : 'border:1.5px solid transparent;color:'+(d?'#d1d5db':'#374151')+';font-weight:500'}">
                     <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;${active?'background:rgba(5,150,105,.16)':'background:'+(d?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)')}" aria-hidden="true">
-                        ${icons[page]||'📄'}
+                        ${hmxIcon(page,icons[page]||'📄')}
                     </span>
                     <span class="flex-1">${t(page)}</span>
                     ${active?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 6h8M6 2l4 4-4 4"/></svg>':''}
@@ -1848,97 +1848,29 @@ function renderHomePage()
         ${hmxPrayerStrip(d,l)}
     </div>
 
-    <!-- ③ HERO SECTION -->
-    <div class="${d?'hero-luxury':'hero-luxury-light'} rounded-3xl mb-12 relative page-enter overflow-hidden hmx-hero"
-        style="min-height:440px;display:flex;align-items:center;justify-content:center;padding:56px 24px;color:${d?'white':'inherit'}">
+    <!-- ③ HERO SECTION (v269 — Peacock Crest redesign: one deep-indigo panel, a single feather-eye motif, calm left-aligned type; old orbs/particles/ornaments/crescent badge removed) -->
+    <section class="pkh ${d?'pkh-dark':'pkh-light'} hmx-hero page-enter" aria-labelledby="pkh-title">
+        <div class="pkh-eye" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="pkh-calli" aria-hidden="true">آل بيت</div>
 
-        <!-- Geo grid (Step 1 — Hero Pattern Refinement: merged the redundant
-             islamic-geo-overlay crosshatch into hero-geo-bg below; both were
-             near-identical diagonal line grids stacked on top of each other) -->
-        <div class="hero-geo-bg"></div>
-        <div class="hero-pattern-overlay"></div>
-        <div class="hero-allah" aria-hidden="true"></div>
+        <div class="pkh-body">
+            <p class="pkh-bismillah arabic-text" dir="rtl" lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
 
-        <!-- Dark mode: orbs + particles -->
-        ${d?`
-        <div class="hero-orb hero-orb-1"></div>
-        <div class="hero-orb hero-orb-2"></div>
-        <div class="hero-orb hero-orb-3"></div>
-        ${Array.from({length:16},(_,i)=>`
-        <div class="hero-particle" style="
-            width:${3+i%4*2}px;height:${3+i%4*2}px;
-            left:${4+i*6}%;bottom:-8px;
-            background:${['rgba(180,83,9,.9)','rgba(5,150,105,.7)','rgba(255,255,255,.5)','rgba(201,162,39,.6)'][i%4]};
-            animation-duration:${7+i*1.1}s;animation-delay:${i*.55}s;
-            --drift:${(i%2===0?1:-1)*38}px">
-        </div>`).join('')}
-        `:''}
+            <h1 id="pkh-title" class="pkh-title hmx-hero-title">${l==='bn'?'আহলে বাইত (আ.)':'Ahl al-Bayt (a.s)'}</h1>
+            <p class="hero-arabic-sub pkh-sub" lang="ar">آلُ بَيْتِ النَّبِيِّ ﷺ</p>
 
-        <!-- Light mode: ornament diamonds + float dots -->
-        ${!d?`
-        <div class="hero-ornament hero-ornament-tl"></div>
-        <div class="hero-ornament hero-ornament-tl2"></div>
-        <div class="hero-ornament hero-ornament-br"></div>
-        <div class="hero-ornament hero-ornament-br2"></div>
-        <div class="hero-float-dot" style="width:7px;height:7px;background:rgba(180,83,9,.42);top:16%;left:10%;animation-duration:4s"></div>
-        <div class="hero-float-dot" style="width:5px;height:5px;background:rgba(5,150,105,.42);top:66%;left:7%;animation-duration:5.5s;animation-delay:.8s"></div>
-        <div class="hero-float-dot" style="width:6px;height:6px;background:rgba(180,83,9,.32);top:20%;right:9%;animation-duration:6s;animation-delay:.3s"></div>
-        <div class="hero-float-dot" style="width:4px;height:4px;background:rgba(5,150,105,.52);top:70%;right:12%;animation-duration:4.5s;animation-delay:1.2s"></div>
-        <div class="hero-float-dot" style="width:9px;height:9px;background:rgba(201,162,39,.28);top:42%;left:4%;animation-duration:7s;animation-delay:.5s"></div>
-        `:''}
-
-        <!-- Hero content -->
-        <div style="position:relative;z-index:2;text-align:center;max-width:700px;margin:0 auto">
-
-            <!-- Bismillah pill -->
-            <div class="hero-bismillah-pill">
-                <div class="hero-bismillah-line"></div>
-                <p class="arabic-text" dir="rtl" style="font-size:clamp(1rem,4.5vw,1.35rem);margin:0;color:${d?'#f59e0b':'#78350f'}">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-                <div class="hero-bismillah-line hero-bismillah-line-r"></div>
-            </div>
-
-            <!-- Crescent badge -->
-            <div class="hero-crescent-badge">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 3C8 3 4.5 6.5 4.5 11C4.5 15.5 8 19 12 19C10 16.5 9 14 9 11C9 7.5 10.5 4.5 14 3.5C13.4 3.2 12.7 3 12 3Z" fill="white" opacity=".95"/>
-                    <circle cx="16" cy="6" r="2.5" fill="white" opacity=".85"/>
-                </svg>
-            </div>
-
-            <!-- Arabic subtitle -->
-            <p class="hero-arabic-sub">آلُ بَيْتِ النَّبِيِّ ﷺ</p>
-
-            <!-- Main heading -->
-            <h1 class="hmx-hero-title" style="font-size:clamp(2rem,6vw,3.4rem);font-weight:900;line-height:1.15;margin-bottom:.65rem;
-                color:${d?'#fff':'#022c22'};font-family:'Amiri',serif;
-                ${d?'text-shadow:0 4px 24px rgba(0,0,0,.3)':''}">
-                ${l==='bn'?'আহলে বাইত (আ.)':'Ahl al-Bayt (a.s)'}
-            </h1>
-
-            <!-- Gold divider dots -->
-            <div class="hero-divider-dots">
-                <span class="hero-divider-dot"></span>
-                <span class="hero-divider-dot hero-divider-dot-mid"></span>
-                <span class="hero-divider-dot"></span>
-            </div>
-
-            <!-- Tagline -->
-            <!-- Step 5 — Final Polish: light-mode alpha was .58, measuring ~3.9:1
-                 against this hero's pale gradient — under the 4.5:1 AA floor for
-                 this text size. Bumped to .70 (same #022c22 green, no new color)
-                 for ~5.3:1. Dark-mode alpha (.78, already high contrast) unchanged. -->
-            <p class="hmx-hero-tag" style="font-size:clamp(.88rem,2.5vw,1.05rem);line-height:1.75;margin-bottom:2rem;
-                color:${d?'rgba(255,255,255,.78)':'rgba(2,44,34,.70)'};
-                max-width:480px;margin-left:auto;margin-right:auto">
+            <p class="pkh-tag hmx-hero-tag">
                 ${l==='bn'
                     ?'কুরআন, হাদিস ও পবিত্র ইমামদের শিক্ষায় আলোকিত হোন'
                     :"Enlighten yourself with Quran, Hadith & the Holy Imams' teachings"}
             </p>
 
-            <!-- v241: the three hero CTA buttons (Imams / Duas / Blog) were removed on request — the same pages are one tap away in the bottom nav and the Sections grid below. -->
+            <!-- v241: the hero CTA buttons stay removed — the same pages are one tap away in the bottom nav and the Sections grid below. -->
 
-            <!-- Stats row (count-up on scroll into view) -->
-            <div class="hero-stats-row">
+        </div>
+
+        <!-- Stats row (count-up on scroll into view — JS hooks: .hero-stat-num[data-count-target]) -->
+            <dl class="hero-stats-row pkh-stats">
                 ${[
                     [1,       l==='bn'?'আল্লাহ':'Allah'],
                     [124313,  l==='bn'?'নবী-রাসূল':'Prophets'],
@@ -1946,13 +1878,12 @@ function renderHomePage()
                     [72,      l==='bn'?'কারবালার শহীদ':'Karbala Martyrs'],
                     [99,      l==='bn'?'আসমাউল হুসনা':'Names of Allah'],
                 ].map(([num,label])=>`
-                <div class="hero-stat-item">
-                    <span class="hero-stat-num" data-count-target="${num}">${l==='bn'?toBengaliDigits(num.toLocaleString('en-US')):num.toLocaleString('en-US')}</span>
-                    <div class="hero-stat-label">${label}</div>
+                <div class="hero-stat-item pkh-stat">
+                    <dt class="hero-stat-label">${label}</dt>
+                    <dd class="hero-stat-num" data-count-target="${num}">${l==='bn'?toBengaliDigits(num.toLocaleString('en-US')):num.toLocaleString('en-US')}</dd>
                 </div>`).join('')}
-            </div>
-        </div>
-    </div>
+        </dl>
+    </section>
 
     <!-- v263: quick-access row (phones only, CSS-gated) -->
     ${hmxQuickAccess(d,l)}
@@ -2461,7 +2392,7 @@ const HMX_ICONS = {
     blog:    '<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19z"/><path d="M14 7l3 3"/>',
     knowledgeCenter: '<path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5z"/><path d="M20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/>',
     quiz:    '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.6a2.6 2.6 0 114.2 2.1c-.9.6-1.7 1.1-1.7 2.3"/><circle cx="12" cy="17" r=".7" fill="currentColor"/>',
-    arabic:  '<text x="12" y="19.5" text-anchor="middle" font-size="24" font-family="Amiri,serif" fill="currentColor" stroke="none">\u0639</text>',
+    arabic:  '<path d="M5 7V5h14v2"/><path d="M12 5v14"/><path d="M9 19h6"/>',
     dua:     '<path d="M3 11c3.2 0 5.2 1.6 6.6 3.6L12 18l2.4-3.4C15.8 12.6 17.8 11 21 11"/><path d="M3 11c0 5 3.5 9 9 9s9-4 9-9"/><path d="M12 3v3M10.5 4.5h3"/>',
     playlists: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
     tasbeeh: '<circle cx="12" cy="4.8" r="1.8"/><circle cx="18" cy="8" r="1.8"/><circle cx="19" cy="14.5" r="1.8"/><circle cx="14.5" cy="19.5" r="1.8"/><circle cx="8" cy="19" r="1.8"/><circle cx="4.6" cy="13.2" r="1.8"/><circle cx="6" cy="7.2" r="1.8"/>',
@@ -2470,8 +2401,17 @@ const HMX_ICONS = {
     ramadan: '<path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z"/><path d="M17 3.8l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/>',
     khumsZakat: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01" stroke-width="2.2"/>',
     worldMap: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/>',
-    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    home:    '<path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5.5h4V20"/>',
+    bookmarks: '<path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>',
+    backup:  '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V15"/>',
+    about:   '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".8" fill="currentColor"/>',
+    contact: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+    familyTree: '<circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v5M12 12H6v5M12 12h6v5"/>',
+    searchPage: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/>',
+    analytics: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'
 };
+HMX_ICONS.ahlulBaytUnified = HMX_ICONS.imams;
 function hmxIcon(key, fallback) {
     const g = HMX_ICONS[key];
     if (!g) return fallback || '';
