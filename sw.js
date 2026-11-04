@@ -1,5 +1,5 @@
 
-const CACHE = 'ahlbayt-v266'; // v266: HOME — own SVG icon set, Masumeen name strip, section rhythm (style.css v266 block, script-2-ui.js additions). Bumped so installed PWAs pick up the change.
+const CACHE = 'ahlbayt-v275'; // v275: footer premium polish (style.css v275 block, CSS only). v274: footer Quick Links wider + 4 columns on desktop (style.css v274 block). v273: Skyline Depth now visible in DARK mode (style.css v273 block). v272: page background Skyline Depth (style.css v272 block + skyline-parallax.js). v271: navigation bar Peacock Dock. v270: page background Peacock Silk. v269: home hero redesign (Peacock Crest). v268: LIGHT MODE Peacock Feather palette (style.css v268 block). Bumped so installed PWAs pick up the change.
 // v84: Phase 3B corrections (KC search now also finds Blog posts a KC topic actually surfaces — History/Akhlaq/etc. — via the same SearchEngine, no new index; static <html lang> no longer briefly contradicts a saved English preference) — JS/HTML changed, bumped so installed PWAs refresh.
 // v83: Knowledge Center Phase 3B (Hadith title/attribution hierarchy, scope-labelled searches incl. Global Search page text, English-mode Blog excerpts + lang attributes + <html lang>, Blog terminology) — JS/CSS changed, bumped so installed PWAs refresh.
 // v82: Knowledge Center Phase 3A (Related→Back stack extended to cover the new Saved view, topic/search breadcrumb, cross-tab Bookmarked/Favorites entry point, "All Topics" no longer clears an active search) — JS/CSS changed, bumped so installed PWAs refresh.
@@ -311,6 +311,7 @@ const STATIC = [
     './assets/js/core/data-backup.js',
     './assets/js/core/script-4-boot.js',
     './assets/js/core/reader-mode.js',
+    './assets/js/core/skyline-parallax.js',
     './assets/js/core/dua-playlist.js',
     './assets/js/core/arabic-corner.js',
     './assets/js/core/date-converter.js',

@@ -110,6 +110,9 @@
     </script>
 </head>
 <body class="bg-gray-50 text-gray-900 fs-medium islamic-pattern-bg">
+<!-- v272: decorative skyline backdrop (light mode). Purely visual; see the v272 block in style.css and assets/js/core/skyline-parallax.js. -->
+<div id="pk-sky" aria-hidden="true"><i class="pk-l1"></i><i class="pk-l2"></i><i class="pk-l3"></i></div>
+
 
 <!-- Skip-to-content: first focusable element in the document, so keyboard
      and screen-reader users can bypass the header/nav on every page load
@@ -486,6 +489,8 @@ setTimeout(function(){var s=document.getElementById('splash-screen');if(s){if(wi
 <!-- Phase 4: lazy-image fade-in helper. Self-contained (no dependency on
      `state` or any other global), so load order relative to the files
      above does not matter. -->
+<!-- v272: skyline parallax (self-contained, only needs #pk-sky above). -->
+<script src="assets/js/core/skyline-parallax.js"></script>
 <script src="assets/js/core/phase4-animations.js"></script>
 </body>
 </html>
