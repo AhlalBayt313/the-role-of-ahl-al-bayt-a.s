@@ -7002,3 +7002,543 @@ html[data-theme="dark"] .hmx-nm { color: #fcd34d; }
 /* section rhythm: one consistent gap between home sections (inline margins on the <section>s are overridden) */
 .home-layout-grid section { margin-bottom: clamp(1.75rem, 4vw, 2.5rem) !important; }
 .home-sidebar-col > * { margin-bottom: clamp(1.25rem, 3vw, 1.75rem); }
+
+/* ============================================================================
+   v267 — SVG icons in header / "More" menu / mobile drawer + design tokens (additive; revert = delete this block
+   and the three hmxIcon(...) calls in renderHeader / drawer)
+   ============================================================================ */
+:root {
+    --ds-gold: #c9a227;
+    --ds-emerald: #059669;
+    --ds-radius-card: 18px;
+    --ds-radius-chip: 12px;
+    --ds-shadow-card: 0 1px 0 rgba(201,162,39,.18), 0 10px 24px -16px rgba(2,44,34,.35);
+}
+.nav-pill .hmx-ico { width: 17px; height: 17px; display: inline-block; vertical-align: -3px; margin-right: 3px; }
+#main-header .hmx-ico { stroke-width: 1.8; }
+#main-header [role="menu"] .hmx-ico, #main-header .flex.items-center.gap-2\.5 .hmx-ico { width: 18px; height: 18px; }
+#mobile-menu-drawer .hmx-ico { width: 19px; height: 19px; color: #047857; }
+html[data-theme="dark"] #mobile-menu-drawer .hmx-ico { color: #6ee7b7; }
+#mobile-menu-drawer button[aria-current="page"] .hmx-ico { color: #059669; }
+.home-layout-grid .feature-card-luxury { border-radius: var(--ds-radius-card); }
+.hmx-q-ic, .hmx-ps-i { border-radius: var(--ds-radius-chip); }
+.hmx-q-ic { border-radius: 50%; }
+
+/* ============================================================================
+   v268 — LIGHT MODE: "Peacock Feather" palette (#4D52B4 #4E9CE8 #70D6C5 #CAE5BC #E1EDD4)
+   Scope: only html:not([data-theme="dark"]). Dark mode is untouched.
+   The brand "emerald" ramp (Tailwind utilities + app palette + semantic tokens) is re-pointed to the peacock ramp,
+   so every text-/bg-/border-emerald-* class and var(--color-primary) follows without editing markup.
+   Gold accents are intentionally kept. Revert = delete this block.
+   ============================================================================ */
+html:not([data-theme="dark"]) {
+    --pk-indigo:#4D52B4; --pk-blue:#4E9CE8; --pk-aqua:#70D6C5; --pk-sage:#CAE5BC; --pk-cream:#E1EDD4;
+    /* Tailwind utility ramp (green-brand) */
+    --color-emerald-50:#F4F8EE; --color-emerald-100:#E1EDD4; --color-emerald-200:#CAE5BC; --color-emerald-300:#A5E0D2;
+    --color-emerald-400:#70D6C5; --color-emerald-500:#3F86D6; --color-emerald-600:#4D52B4; --color-emerald-700:#3F4399;
+    --color-emerald-800:#34387F; --color-emerald-900:#292C66;
+    --color-green-50:#F4F8EE; --color-green-100:#E1EDD4; --color-green-200:#CAE5BC; --color-green-300:#A5E0D2;
+    --color-green-400:#70D6C5; --color-green-500:#3F86D6; --color-green-600:#4D52B4; --color-green-700:#3F4399;
+    --color-green-800:#34387F; --color-green-900:#292C66;
+    --color-teal-100:#DCEFFB; --color-teal-300:#A8D0F5; --color-teal-500:#3F86D6; --color-teal-700:#2F66A8; --color-teal-900:#244A7A;
+    /* app palette used by hand-written CSS */
+    --emerald-200:#CAE5BC; --emerald-300:#A5E0D2; --emerald-400:#70D6C5; --emerald-500:#3F86D6; --emerald-600:#4D52B4;
+    --emerald-700:#3F4399; --emerald-800:#34387F; --emerald-900:#292C66; --emerald-950:#1c1e47;
+    --emerald-glow:rgba(77,82,180,.38);
+    --color-teal:#2F78C4; --color-teal-dark:#2F66A8;
+    --color-mosque-green:#292C66;
+    /* semantic tokens */
+    --color-bg:#EEF5E3; --color-primary:#4D52B4; --color-primary-hover:#3F4399; --color-secondary:#2F78C4;
+    --ds-emerald:#4D52B4;
+}
+html:not([data-theme="dark"]) body { background-color: #EEF5E3; background-image: linear-gradient(180deg, #E1EDD4 0%, #EEF5E3 40%, #F4F8EE 100%); }
+html:not([data-theme="dark"]) .nav-pill.active::after { background: linear-gradient(90deg, #4D52B4, #70D6C5) !important; box-shadow: 0 0 10px rgba(77,82,180,.5); }
+
+/* home: prayer banner in peacock */
+html:not([data-theme="dark"]) .next-prayer-banner { background: linear-gradient(135deg, #292C66, #4D52B4 62%, #3F86D6); border-color: rgba(112,214,197,.4); box-shadow: 0 14px 26px -16px rgba(41,44,102,.6); }
+html:not([data-theme="dark"]) #next-prayer-home { border-color: rgba(112,214,197,.45); box-shadow: 0 1px 0 rgba(112,214,197,.5), 0 14px 26px -16px rgba(41,44,102,.6); }
+html:not([data-theme="dark"]) .next-prayer-time { background: linear-gradient(135deg, #70D6C5, #E1EDD4); -webkit-background-clip: text; background-clip: text; }
+html:not([data-theme="dark"]) .hmx-ps-i.is-next { background: #70D6C5 !important; box-shadow: 0 0 0 1px rgba(225,237,212,.9), 0 0 16px rgba(112,214,197,.55); }
+html:not([data-theme="dark"]) .hmx-ps-i.is-next * { color: #1c1e47 !important; }
+html:not([data-theme="dark"]) .next-prayer-banner .np-note { background: rgba(225,237,212,.14); border-color: rgba(225,237,212,.35); }
+html:not([data-theme="dark"]) .hmx-hb .hb-strip--wide .hb-next { border-left-color: rgba(77,82,180,.3); }
+
+/* home: five accent families -> peacock family (inline vars beaten with !important) */
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#059669"] { --fc-accent:#4D52B4 !important; --fc-accent-bg:rgba(77,82,180,.1) !important; --fc-accent-faint:rgba(77,82,180,.28) !important; }
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#0f766e"] { --fc-accent:#2F78C4 !important; --fc-accent-bg:rgba(78,156,232,.13) !important; --fc-accent-faint:rgba(47,120,196,.3) !important; }
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#b45309"] { --fc-accent:#1E8F7E !important; --fc-accent-bg:rgba(112,214,197,.2) !important; --fc-accent-faint:rgba(30,143,126,.3) !important; }
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#9f1239"] { --fc-accent:#6A5FC8 !important; --fc-accent-bg:rgba(106,95,200,.11) !important; --fc-accent-faint:rgba(106,95,200,.28) !important; }
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#4d7c0f"] { --fc-accent:#5E8F46 !important; --fc-accent-bg:rgba(202,229,188,.4) !important; --fc-accent-faint:rgba(94,143,70,.3) !important; }
+html:not([data-theme="dark"]) .hmx-q-item:nth-child(4n+1) { --hq:#4D52B4 !important; }
+html:not([data-theme="dark"]) .hmx-q-item:nth-child(4n+2) { --hq:#2F78C4 !important; }
+html:not([data-theme="dark"]) .hmx-q-item:nth-child(4n+3) { --hq:#1E8F7E !important; }
+html:not([data-theme="dark"]) .hmx-q-item:nth-child(4n+4) { --hq:#5E8F46 !important; }
+html:not([data-theme="dark"]) .hmx-names { background: linear-gradient(135deg, rgba(77,82,180,.08), rgba(112,214,197,.14)); border-color: rgba(77,82,180,.25); }
+html:not([data-theme="dark"]) .hmx-nm { color: #3F4399; }
+html:not([data-theme="dark"]) .hmx-nm-dot { color: #4E9CE8; }
+html:not([data-theme="dark"]) .home-layout-grid::before {
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 1l5 7-5 7-5-7z' fill='none' stroke='%234D52B4' stroke-width='1.3'/%3E%3Ccircle cx='8' cy='8' r='1.4' fill='%2370D6C5'/%3E%3C/svg%3E") center / 16px 16px no-repeat,
+        linear-gradient(90deg, transparent, rgba(77,82,180,.55)) left center / calc(50% - 14px) 1px no-repeat,
+        linear-gradient(270deg, transparent, rgba(77,82,180,.55)) right center / calc(50% - 14px) 1px no-repeat;
+}
+
+/* v268 pass 2 — remaining hard-coded greens in light mode */
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#1D9E75" i] { --fc-accent:#1E8F7E !important; --fc-accent-bg:rgba(112,214,197,.2) !important; --fc-accent-faint:rgba(30,143,126,.3) !important; }
+html:not([data-theme="dark"]) .feature-card-luxury[style*="--fc-accent:#0E8FA3" i] { --fc-accent:#2F78C4 !important; --fc-accent-bg:rgba(78,156,232,.13) !important; --fc-accent-faint:rgba(47,120,196,.3) !important; }
+html:not([data-theme="dark"]) .hmx-ps-i { color: rgba(225,237,212,.9); }
+html:not([data-theme="dark"]) .bnav-btn.active .bnav-icon { background: rgba(77,82,180,.14); }
+html:not([data-theme="dark"]) .hj-adj-btn[aria-pressed="true"] { background: #4D52B4; border-color: #4D52B4; }
+html:not([data-theme="dark"]) .skip-link { background: #3F4399; }
+
+/* v268 pass 3 */
+html:not([data-theme="dark"]) .feature-card-luxury { --fc-accent:#4D52B4; --fc-accent-bg:rgba(77,82,180,.1); --fc-accent-faint:rgba(77,82,180,.25); }
+html:not([data-theme="dark"]) .bnav-btn.active { color: #3F4399 !important; }
+html:not([data-theme="dark"]) .ab-hadith [class*="bg-purple"] { background: rgba(77,82,180,.12) !important; color: #3F4399 !important; }
+html:not([data-theme="dark"]) .kc-card:hover { box-shadow: var(--shadow-lg), 0 0 0 1px rgba(77,82,180,.14) !important; }
+
+/* v268 pass 4 — hijri card, prayer icon tile, hadith widget, page background */
+html:not([data-theme="dark"]) { background-color: #EEF5E3; }
+html:not([data-theme="dark"]) body.islamic-pattern-bg, html:not([data-theme="dark"]) #app { background-color: transparent; }
+html:not([data-theme="dark"]) .hb-strip { background: linear-gradient(135deg, rgba(77,82,180,.12), rgba(112,214,197,.2)); border-color: rgba(77,82,180,.25); }
+html:not([data-theme="dark"]) .next-prayer-banner > div > div:first-child > div:first-child { background: linear-gradient(135deg, #70D6C5, #4E9CE8) !important; box-shadow: 0 4px 20px rgba(78,156,232,.45) !important; }
+html:not([data-theme="dark"]) .ab-hadith { background: linear-gradient(135deg, #E1EDD4, #DCEFFB); border-color: rgba(77,82,180,.22) !important; }
+
+/* ============================================================================
+   v269 — HOME HERO REDESIGN: "Peacock Crest"
+   One deep-indigo panel, one memorable motif (a feather-eye with "آل بيت" as its pupil), calm left-aligned type,
+   stats as a quiet footer rule. Old orbs / particles / diamonds / crescent badge / divider dots are no longer rendered.
+   JS hooks kept: .hero-stat-num[data-count-target]. Revert = restore the old hero block in script-2-ui.js
+   (renderHome, "③ HERO SECTION") and delete this block.
+   ============================================================================ */
+.pkh {
+    --pkh-ink: #1c1e47; --pkh-indigo: #292C66; --pkh-mid: #4D52B4; --pkh-blue: #4E9CE8;
+    --pkh-aqua: #70D6C5; --pkh-sage: #CAE5BC; --pkh-cream: #F4F8EE; --pkh-gold: #E6C36A;
+    --eye: clamp(230px, 36vw, 380px);
+    position: relative; isolation: isolate; overflow: hidden;
+    border-radius: 28px; margin-bottom: 3rem;
+    padding: clamp(36px, 6vw, 64px) clamp(24px, 5vw, 60px) 0;
+    color: var(--pkh-cream);
+    background:
+        radial-gradient(120% 90% at 100% 0%, rgba(78,156,232,.38) 0%, transparent 55%),
+        radial-gradient(80% 70% at 0% 100%, rgba(112,214,197,.14) 0%, transparent 60%),
+        linear-gradient(150deg, #292C66 0%, #1c1e47 100%);
+    box-shadow: 0 1px 0 rgba(230,195,106,.5) inset, 0 24px 48px -28px rgba(28,30,71,.75);
+    border: 1px solid rgba(112,214,197,.28);
+}
+.pkh.pkh-dark {
+    background:
+        radial-gradient(110% 80% at 100% 0%, rgba(77,82,180,.42) 0%, transparent 55%),
+        radial-gradient(70% 60% at 0% 100%, rgba(230,195,106,.08) 0%, transparent 60%),
+        linear-gradient(150deg, #181a3d 0%, #0d0e24 100%);
+    border-color: rgba(230,195,106,.26);
+    box-shadow: 0 1px 0 rgba(230,195,106,.35) inset, 0 24px 48px -28px rgba(0,0,0,.8);
+}
+
+/* the motif: concentric rings, calligraphic pupil */
+.pkh-eye {
+    position: absolute; z-index: 0; pointer-events: none;
+    width: var(--eye); aspect-ratio: 1; right: clamp(-90px, -2vw, 5%); top: 44%; transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(112,214,197,.30) 0%, rgba(78,156,232,.16) 38%, transparent 70%);
+}
+.pkh-eye i { position: absolute; left: 50%; top: 50%; border-radius: 50%; transform: translate(-50%, -50%); }
+.pkh-eye i:nth-child(1) { width: 100%; height: 100%; border: 1px solid rgba(112,214,197,.30); }
+.pkh-eye i:nth-child(2) { width: 78%; height: 78%; border: 1px solid rgba(78,156,232,.55);
+    background: radial-gradient(circle, rgba(77,82,180,.55), rgba(41,44,102,.15)); }
+.pkh-eye i:nth-child(3) { width: 56%; height: 56%; border: 1px solid rgba(112,214,197,.75);
+    background: radial-gradient(circle at 35% 30%, rgba(112,214,197,.55), rgba(78,156,232,.30) 55%, rgba(41,44,102,.2)); }
+.pkh-eye i:nth-child(4) { width: 34%; height: 34%; border: 1px solid rgba(230,195,106,.8);
+    background: radial-gradient(circle at 50% 40%, #292C66, #12132e);
+    box-shadow: 0 0 0 4px rgba(230,195,106,.10), 0 0 34px rgba(230,195,106,.28); }
+.pkh-calli {
+    position: absolute; z-index: 0; pointer-events: none; direction: rtl;
+    right: calc(clamp(-90px, -2vw, 5%) + var(--eye) * .5); top: 44%;
+    transform: translate(50%, -52%);
+    font-family: 'Amiri', serif; font-weight: 700; line-height: 1; white-space: nowrap;
+    font-size: calc(var(--eye) * .115);
+    color: var(--pkh-gold); text-shadow: 0 0 18px rgba(230,195,106,.45);
+}
+
+/* content */
+.pkh-body { position: relative; z-index: 1; max-width: 620px; text-align: left; }
+.pkh .pkh-bismillah {
+    direction: ltr; text-align: left; margin: 0 0 1.1rem; color: var(--pkh-gold);
+    font-size: clamp(1.05rem, 3.6vw, 1.4rem); line-height: 1.7; opacity: .95;
+}
+.pkh .pkh-title {
+    margin: 0; color: var(--pkh-cream);
+    font-family: 'Noto Serif Bengali', 'Amiri', serif; font-weight: 700;
+    font-size: clamp(2.1rem, 5.4vw, 3.7rem); line-height: 1.2; letter-spacing: -.01em; text-shadow: none;
+}
+.pkh .pkh-sub {
+    direction: ltr; text-align: left; margin: .35rem 0 0;
+    font-family: 'Amiri', serif; font-size: clamp(1.15rem, 3.2vw, 1.5rem); line-height: 1.7; color: var(--pkh-aqua);
+}
+.pkh .pkh-tag {
+    margin: 1.1rem 0 0; max-width: 44ch; font-size: clamp(.95rem, 2.4vw, 1.1rem); line-height: 1.8;
+    color: rgba(244,248,238,.82);
+}
+
+/* stats: quiet footer rule, no cards */
+.pkh .pkh-stats {
+    position: relative; z-index: 1; display: flex; margin: clamp(28px, 4.5vw, 44px) calc(clamp(24px, 5vw, 60px) * -1) 0;
+    padding: 0 clamp(24px, 5vw, 60px); border-top: 1px solid rgba(112,214,197,.22);
+    background: rgba(12,13,36,.28); gap: 0;
+}
+.pkh .pkh-stat {
+    flex: 1 1 0; min-width: 0; margin: 0; display: flex; flex-direction: column-reverse; justify-content: flex-end;
+    text-align: left; padding: 16px 18px 18px 0;
+}
+.pkh .pkh-stat + .pkh-stat { padding-left: 18px; border-left: 1px solid rgba(112,214,197,.16); }
+.pkh .pkh-stat dt, .pkh .pkh-stat dd { margin: 0; }
+.pkh .hero-stat-num {
+    display: block; font-size: clamp(1.15rem, 2.6vw, 1.6rem); font-weight: 700; line-height: 1.15;
+    color: var(--pkh-cream); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.pkh .hero-stat-label {
+    margin: 0 0 0; padding-top: 5px; font-size: .78rem; line-height: 1.4; letter-spacing: 0;
+    color: rgba(202,229,188,.78);
+}
+
+/* the one orchestrated moment: the eye opens once on load */
+@media (prefers-reduced-motion: no-preference) {
+    .pkh-eye i { animation: pkhOpen .9s cubic-bezier(.2,.7,.2,1) both; }
+    .pkh-eye i:nth-child(2) { animation-delay: .08s; } .pkh-eye i:nth-child(3) { animation-delay: .16s; } .pkh-eye i:nth-child(4) { animation-delay: .24s; }
+    .pkh-calli { animation: pkhFade .9s .45s ease both; }
+}
+@keyframes pkhOpen { from { transform: translate(-50%, -50%) scale(.55); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+@keyframes pkhFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* beat the older compact-hero rules (they hide the sub-line + stats and force 16px padding at every width) */
+.pkh.hmx-hero {
+    min-height: 0 !important; margin-bottom: 3rem !important; border-radius: 28px;
+    padding: clamp(36px, 6vw, 64px) clamp(24px, 5vw, 60px) 0 !important;
+}
+.pkh.hmx-hero .hero-arabic-sub { display: block !important; }
+.pkh.hmx-hero .hero-stats-row { display: flex !important; }
+.pkh.hmx-hero .pkh-title { font-size: clamp(2.1rem, 5.4vw, 3.7rem) !important; margin: 0 !important; }
+.pkh.hmx-hero .pkh-tag { font-size: clamp(.95rem, 2.4vw, 1.1rem) !important; line-height: 1.8 !important; margin: 1.1rem 0 0 !important; }
+
+/* phones: eye becomes a cropped crest in the corner, stats scroll sideways */
+@media (max-width: 767px) {
+    .pkh.hmx-hero { min-height: 0 !important; padding: 30px 20px 0 !important; margin-bottom: 1.25rem !important; border-radius: 24px; --eye: 230px; }
+    .pkh .pkh-eye { right: -92px; top: 34px; transform: none; opacity: .5; }
+    .pkh .pkh-calli { display: none; }
+    .pkh.hmx-hero .hero-arabic-sub { display: block !important; }
+    .pkh.hmx-hero .pkh-title { font-size: 2rem !important; margin: 0 !important; }
+    .pkh.hmx-hero .pkh-tag { font-size: .92rem !important; line-height: 1.75 !important; margin: .9rem 0 0 !important; max-width: 30ch; }
+    .pkh.hmx-hero .hero-stats-row {
+        display: flex !important; flex-wrap: nowrap; justify-content: flex-start; margin: 26px -20px 0; padding: 0 20px;
+        overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .pkh .hero-stats-row::-webkit-scrollbar { display: none; }
+    .pkh .pkh-stat { flex: 0 0 auto; padding: 14px 16px 16px 0; }
+    .pkh .pkh-stat + .pkh-stat { padding-left: 16px; }
+    .pkh .hero-stat-num { font-size: 1.2rem; }
+    .pkh .hero-stat-label { font-size: .72rem; white-space: nowrap; }
+}
+
+/* ============================================================================
+   v270 — PAGE BACKGROUND REDESIGN: "Peacock Silk"
+   Layers: (1) body background-image = faint 8-point-star lattice (khatam) over the base colour,
+           (2) body::before = fixed light — soft peacock glows + fine grain, so content scrolls over a still backdrop.
+   The old green radial + diagonal-line background is replaced in both themes. Reader mode (body.rm-on) keeps its own paper themes.
+   Revert = delete this block.
+   ============================================================================ */
+:root {
+    --pks-star-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%234D52B4' stroke-width='1' stroke-opacity='.075'%3E%3Crect x='26' y='26' width='36' height='36'/%3E%3Crect x='26' y='26' width='36' height='36' transform='rotate(45 44 44)'/%3E%3Ccircle cx='44' cy='44' r='4'/%3E%3Cpath d='M0-7L7 0L0 7L-7 0ZM88-7L95 0L88 7L81 0ZM0 81L7 88L0 95L-7 88ZM88 81L95 88L88 95L81 88Z'/%3E%3C/g%3E%3C/svg%3E");
+    --pks-star-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%2370D6C5' stroke-width='1' stroke-opacity='.075'%3E%3Crect x='26' y='26' width='36' height='36'/%3E%3Crect x='26' y='26' width='36' height='36' transform='rotate(45 44 44)'/%3E%3Ccircle cx='44' cy='44' r='4' stroke='%23E6C36A' stroke-opacity='.12'/%3E%3Cpath d='M0-7L7 0L0 7L-7 0ZM88-7L95 0L88 7L81 0ZM0 81L7 88L0 95L-7 88ZM88 81L95 88L88 95L81 88Z'/%3E%3C/g%3E%3C/svg%3E");
+    --pks-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.17 0 0 0 0 0.4 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* light: pale sage-cream silk with the lattice */
+html:not([data-theme="dark"]) body.islamic-pattern-bg {
+    background-color: #EEF5E3 !important;
+    background-image: var(--pks-star-light), linear-gradient(180deg, #E4EFD8 0%, #EEF5E3 38%, #F5F9EF 100%) !important;
+    background-size: 88px 88px, 100% 100% !important;
+    background-repeat: repeat, no-repeat !important;
+}
+/* dark: ink-teal with a faint gold/aqua lattice (#app was painting an opaque layer over it, so it never showed) */
+html[data-theme="dark"] body.islamic-pattern-bg {
+    background-color: #061410 !important;
+    background-image: var(--pks-star-dark), linear-gradient(180deg, #08171f 0%, #061410 45%, #050f0d 100%) !important;
+    background-size: 88px 88px, 100% 100% !important;
+    background-repeat: repeat, no-repeat !important;
+}
+/* boot script injects an opaque #app colour in both themes, which hid the layers below */
+html[data-theme] body #app { background-color: transparent !important; }
+
+/* fixed light + grain */
+body.islamic-pattern-bg::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+        var(--pks-grain) 0 0 / 140px 140px,
+        radial-gradient(60% 50% at 100% 0%, rgba(78,156,232,.22), transparent 70%),
+        radial-gradient(55% 45% at 0% 100%, rgba(112,214,197,.22), transparent 70%),
+        radial-gradient(40% 35% at 0% 0%, rgba(230,195,106,.12), transparent 70%),
+        radial-gradient(70% 40% at 50% 0%, rgba(255,255,255,.55), transparent 75%);
+    opacity: 1;
+}
+body.islamic-pattern-bg::before { background-blend-mode: multiply, normal, normal, normal, normal; }
+html[data-theme="dark"] body.islamic-pattern-bg::before {
+    background:
+        var(--pks-grain) 0 0 / 140px 140px,
+        radial-gradient(60% 50% at 100% 0%, rgba(77,82,180,.38), transparent 70%),
+        radial-gradient(55% 45% at 0% 100%, rgba(112,214,197,.12), transparent 70%),
+        radial-gradient(40% 35% at 0% 0%, rgba(230,195,106,.09), transparent 70%);
+    background-blend-mode: screen, normal, normal, normal;
+    opacity: .9;
+}
+/* reader mode and mourning keep their own look */
+body.rm-on.islamic-pattern-bg::before { display: none; }
+@media (max-width: 767px) {
+    html:not([data-theme="dark"]) body.islamic-pattern-bg, html[data-theme="dark"] body.islamic-pattern-bg { background-size: 72px 72px, 100% 100% !important; }
+}
+
+/* ============================================================================
+   v271 — NAVIGATION BAR REDESIGN: "Peacock Dock"
+   Header: frosted glass + gradient hairline, desktop links in one capsule with a filled active pill, glass utility chips.
+   Mobile: bottom bar becomes a floating glass dock; active tab gets a filled icon pill.
+   Markup is untouched (header inline styles are beaten with !important). Revert = delete this block.
+   ============================================================================ */
+
+/* ── header shell ── */
+html body #main-header {
+    background: rgba(238,245,227,.78) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 0 !important;
+    box-shadow: 0 10px 28px -22px rgba(41,44,102,.55);
+}
+html[data-theme="dark"] body #main-header {
+    background: rgba(8,16,22,.74) !important;
+    box-shadow: 0 10px 28px -20px rgba(0,0,0,.85);
+}
+#main-header::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(77,82,180,.38) 18%, rgba(112,214,197,.7) 50%, rgba(230,195,106,.6) 82%, transparent);
+}
+html[data-theme="dark"] #main-header::after {
+    background: linear-gradient(90deg, transparent, rgba(78,156,232,.4) 18%, rgba(112,214,197,.55) 50%, rgba(230,195,106,.6) 82%, transparent);
+}
+html body #main-header > div { padding-top: 10px !important; padding-bottom: 10px !important; }
+
+/* logo + brand */
+#main-header button[data-param="home"] img { box-shadow: 0 0 0 2px rgba(230,195,106,.7), 0 8px 16px -8px rgba(41,44,102,.6); }
+#main-header button[data-param="home"] .font-bold {
+    background: linear-gradient(135deg, #292C66, #4D52B4 55%, #B8891B) !important;
+    -webkit-background-clip: text !important; background-clip: text !important; -webkit-text-fill-color: transparent !important;
+}
+#main-header button[data-param="home"] .text-xs { color: #2F66A8 !important; opacity: 1 !important; }
+html[data-theme="dark"] #main-header button[data-param="home"] .font-bold { background: linear-gradient(135deg, #70D6C5, #E6C36A) !important; -webkit-background-clip: text !important; background-clip: text !important; }
+html[data-theme="dark"] #main-header button[data-param="home"] .text-xs { color: #70D6C5 !important; }
+
+/* ── desktop links: one capsule, filled active pill ── */
+#main-header nav[aria-label] {
+    padding: 4px; gap: 2px; border-radius: 999px;
+    background: rgba(255,255,255,.55); border: 1px solid rgba(77,82,180,.16);
+    box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+}
+html[data-theme="dark"] #main-header nav[aria-label] { background: rgba(255,255,255,.05); border-color: rgba(112,214,197,.18); box-shadow: none; }
+#main-header .nav-pill, #main-header #more-menu-wrap > button { border-radius: 999px !important; padding: 8px 15px !important; }
+#main-header .nav-pill:not(.active) { background: transparent !important; color: #4a5070 !important; }
+#main-header .nav-pill:not(.active):hover, #main-header #more-menu-wrap > button:hover { background: rgba(77,82,180,.09) !important; color: #292C66 !important; }
+#main-header .nav-pill.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, #4D52B4 0%, #3F6FC9 100%) !important;
+    box-shadow: 0 6px 14px -6px rgba(63,67,153,.75), 0 0 0 1px rgba(255,255,255,.18) inset;
+}
+#main-header .nav-pill::after { display: none !important; }            /* the pill itself marks the active page now */
+html[data-theme="dark"] #main-header .nav-pill:not(.active) { color: #aab3c5 !important; }
+html[data-theme="dark"] #main-header .nav-pill:not(.active):hover, html[data-theme="dark"] #main-header #more-menu-wrap > button:hover { background: rgba(255,255,255,.07) !important; color: #fff !important; }
+html[data-theme="dark"] #main-header .nav-pill.active {
+    color: #E6C36A !important; background: rgba(230,195,106,.12) !important;
+    box-shadow: 0 0 0 1px rgba(230,195,106,.45) inset, 0 8px 18px -10px rgba(230,195,106,.5);
+}
+#main-header #more-menu-wrap > button { color: #4a5070 !important; }
+html[data-theme="dark"] #main-header #more-menu-wrap > button { color: #aab3c5 !important; }
+
+/* more dropdown */
+html body #more-dropdown {
+    border-radius: 20px !important; padding: 8px !important; margin-top: 12px !important; width: 15rem !important;
+    background: #F6FAF0 !important; border: 1px solid rgba(77,82,180,.18) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
+    box-shadow: 0 24px 48px -20px rgba(41,44,102,.55) !important;
+}
+html[data-theme="dark"] body #more-dropdown { background: #0b141c !important; border-color: rgba(112,214,197,.22) !important; box-shadow: 0 24px 48px -20px rgba(0,0,0,.9) !important; }
+#more-dropdown button { border-radius: 12px; }
+#more-dropdown button[aria-current="page"] { background: rgba(77,82,180,.12) !important; color: #3F4399 !important; }
+html[data-theme="dark"] #more-dropdown button[aria-current="page"] { background: rgba(230,195,106,.12) !important; color: #E6C36A !important; }
+
+/* ── utility chips (menu, search, theme, language, font size) ── */
+#main-header [data-action="toggleMenu"], #main-header [data-param="searchPage"], #main-header [data-action="toggleDarkMode"],
+#main-header [data-action="toggleLanguage"], #main-header .hidden.md\:flex.items-center.gap-0\.5.rounded-xl {
+    background: rgba(255,255,255,.6) !important; border: 1px solid rgba(77,82,180,.16);
+    box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+}
+#main-header [data-action="toggleMenu"], #main-header [data-param="searchPage"], #main-header [data-action="toggleDarkMode"] { border-radius: 14px !important; }
+#main-header [data-action="toggleDarkMode"]:hover, #main-header [data-param="searchPage"]:hover { border-color: rgba(77,82,180,.4); }
+html[data-theme="dark"] #main-header [data-action="toggleMenu"], html[data-theme="dark"] #main-header [data-param="searchPage"],
+html[data-theme="dark"] #main-header [data-action="toggleLanguage"], html[data-theme="dark"] #main-header .hidden.md\:flex.items-center.gap-0\.5.rounded-xl {
+    background: rgba(255,255,255,.06) !important; border-color: rgba(112,214,197,.18); box-shadow: none;
+}
+html[data-theme="dark"] #main-header [data-action="toggleDarkMode"] { background: rgba(230,195,106,.12) !important; border-color: rgba(230,195,106,.4); box-shadow: none; }
+
+/* ── mobile bottom nav: floating glass dock ── */
+@media (max-width: 767px) {
+    html body #mobile-bottom-nav {
+        left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); padding: 0 6px !important;
+        border: 1px solid rgba(77,82,180,.2) !important; border-radius: 26px;
+        background: rgba(246,250,240,.82) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%);
+        box-shadow: 0 18px 36px -16px rgba(41,44,102,.6), 0 1px 0 rgba(255,255,255,.9) inset;
+    }
+    html[data-theme="dark"] body #mobile-bottom-nav {
+        background: rgba(10,16,26,.82) !important; border-color: rgba(112,214,197,.22) !important;
+        box-shadow: 0 18px 36px -14px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.06) inset;
+    }
+    #mobile-bottom-nav .bnav-btn { border-radius: 22px; min-height: 58px; }
+    #mobile-bottom-nav .bnav-icon { width: 54px; height: 30px; border-radius: 15px; transition: background .2s ease, box-shadow .2s ease, color .2s ease; }
+    html body #mobile-bottom-nav .bnav-btn.active .bnav-icon {
+        background: linear-gradient(135deg, #4D52B4, #3F86D6); color: #fff;
+        box-shadow: 0 8px 16px -8px rgba(63,67,153,.9);
+    }
+    html[data-theme="dark"] body #mobile-bottom-nav .bnav-btn.active .bnav-icon {
+        background: rgba(230,195,106,.14); color: #E6C36A; box-shadow: 0 0 0 1px rgba(230,195,106,.5) inset;
+    }
+    html[data-theme="dark"] #mobile-bottom-nav .bnav-btn.active { color: #E6C36A !important; }
+    #mobile-bottom-nav .bnav-btn.active .bnav-label { letter-spacing: 0; }
+    /* the dock floats 10px higher than the old bar, so give page content the same room back */
+    html body { padding-bottom: 12px; }
+}
+
+/* ============================================================================
+   v272 — PAGE BACKGROUND: "Skyline Depth" (light mode)
+   Three fixed layers of dome-and-minaret silhouettes at the bottom of the screen + a warm gold horizon glow.
+   JS (assets/js/core/skyline-parallax.js) only nudges the layers upward on scroll at different speeds (transform only).
+   Dark mode, reader mode and print: hidden. prefers-reduced-motion / low-end phones: layers stay still.
+   Revert = delete this block, the <div id="pk-sky"> in index.html, the skyline-parallax.js tag + its sw.js entry.
+   ============================================================================ */
+#pk-sky { --pk-h: 238px; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; }
+#pk-sky::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+    background: radial-gradient(70% 90% at 50% 100%, rgba(230,195,106,.34), transparent 70%);
+}
+#pk-sky i {
+    position: absolute; left: 0; right: 0; height: var(--pk-h); bottom: calc(var(--pk-h) * -.2857);
+    background-repeat: repeat-x; background-position: 50% 0; background-size: auto 100%;
+    will-change: transform; transform: translate3d(0,0,0);
+}
+#pk-sky .pk-l1 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22280%22 viewBox=%220 0 360 280%22%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.24%22%3E%3Crect x=%2230%22 y=%2250%22 width=%229%22 height=%22150%22/%3E%3Crect x=%2227.3%22 y=%2283.0%22 width=%2214.4%22 height=%223.15%22/%3E%3Cpolygon points=%2228.65,50 40.35,50 34.5,28.22%22/%3E%3Ccircle cx=%2234.5%22 cy=%2226.24%22 r=%221.6199999999999999%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.24%22%3E%3Crect x=%2270%22 y=%22130%22 width=%2290%22 height=%2270%22/%3E%3Cpath d=%22M84.4 130 A30.6 35.19 0 0 1 145.6 130 Z%22/%3E%3Crect x=%22113.8%22 y=%2280.81%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%2264%22 y=%22170.6%22 width=%22102%22 height=%2229.4%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.24%22%3E%3Crect x=%22230%22 y=%2230%22 width=%229%22 height=%22170%22/%3E%3Crect x=%22227.3%22 y=%2267.4%22 width=%2214.4%22 height=%223.15%22/%3E%3Cpolygon points=%22228.65,30 240.35,30 234.5,8.219999999999999%22/%3E%3Ccircle cx=%22234.5%22 cy=%226.239999999999998%22 r=%221.6199999999999999%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.24%22%3E%3Crect x=%22262%22 y=%22140%22 width=%2286%22 height=%2260%22/%3E%3Cpath d=%22M275.76 140 A29.240000000000002 33.626 0 0 1 334.24 140 Z%22/%3E%3Crect x=%22303.8%22 y=%2292.374%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22256%22 y=%22174.8%22 width=%2298%22 height=%2225.2%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22360%22 height=%2281%22 fill=%22%234E9CE8%22 fill-opacity=%220.10%22/%3E%3C/svg%3E"); background-position: 20% 0; }
+#pk-sky .pk-l2 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22420%22 height=%22280%22 viewBox=%220 0 420 280%22%3E%3Cg fill=%22%234D52B4%22 fill-opacity=%220.28%22%3E%3Crect x=%2214%22 y=%22120%22 width=%22110%22 height=%2280%22/%3E%3Cpath d=%22M31.599999999999994 120 A37.400000000000006 43.010000000000005 0 0 1 106.4 120 Z%22/%3E%3Crect x=%2267.8%22 y=%2262.989999999999995%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%228%22 y=%22166.4%22 width=%22122%22 height=%2233.6%22/%3E%3C/g%3E%3Cg fill=%22%234D52B4%22 fill-opacity=%220.28%22%3E%3Crect x=%22150%22 y=%2210%22 width=%2210%22 height=%22190%22/%3E%3Crect x=%22147.0%22 y=%2251.79999999999998%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22148.5,10 161.5,10 155.0,-14.200000000000003%22/%3E%3Ccircle cx=%22155.0%22 cy=%22-16.4%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234D52B4%22 fill-opacity=%220.28%22%3E%3Crect x=%22190%22 y=%22145%22 width=%2280%22 height=%2255%22/%3E%3Cpath d=%22M202.8 145 A27.200000000000003 31.28 0 0 1 257.2 145 Z%22/%3E%3Crect x=%22228.8%22 y=%2299.72%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22184%22 y=%22176.9%22 width=%2292%22 height=%2223.099999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234D52B4%22 fill-opacity=%220.28%22%3E%3Crect x=%22320%22 y=%2225%22 width=%2210%22 height=%22175%22/%3E%3Crect x=%22317.0%22 y=%2263.5%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22318.5,25 331.5,25 325.0,0.7999999999999972%22/%3E%3Ccircle cx=%22325.0%22 cy=%22-1.3999999999999986%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234D52B4%22 fill-opacity=%220.28%22%3E%3Crect x=%22345%22 y=%22150%22 width=%2260%22 height=%2250%22/%3E%3Cpath d=%22M354.6 150 A20.400000000000002 23.46 0 0 1 395.4 150 Z%22/%3E%3Crect x=%22373.8%22 y=%22112.53999999999999%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22339%22 y=%22179.0%22 width=%2272%22 height=%2221.0%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22420%22 height=%2281%22 fill=%22%234D52B4%22 fill-opacity=%220.10%22/%3E%3C/svg%3E"); background-position: 60% 0; }
+#pk-sky .pk-l3 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22280%22 viewBox=%220 0 500 280%22%3E%3Cg fill=%22%23292C66%22 fill-opacity=%220.36%22%3E%3Crect x=%2216%22 y=%22140%22 width=%22120%22 height=%2260%22/%3E%3Cpath d=%22M35.199999999999996 140 A40.800000000000004 46.92 0 0 1 116.80000000000001 140 Z%22/%3E%3Crect x=%2274.8%22 y=%2279.08%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%2210%22 y=%22174.8%22 width=%22132%22 height=%2225.2%22/%3E%3C/g%3E%3Cg fill=%22%23292C66%22 fill-opacity=%220.36%22%3E%3Crect x=%22160%22 y=%2280%22 width=%2211%22 height=%22120%22/%3E%3Crect x=%22156.7%22 y=%22106.39999999999999%22 width=%2217.6%22 height=%223.8499999999999996%22/%3E%3Cpolygon points=%22158.35,80 172.65,80 165.5,53.379999999999995%22/%3E%3Ccircle cx=%22165.5%22 cy=%2250.959999999999994%22 r=%221.98%22/%3E%3C/g%3E%3Cg fill=%22%23292C66%22 fill-opacity=%220.36%22%3E%3Crect x=%22210%22 y=%22130%22 width=%22150%22 height=%2270%22/%3E%3Cpath d=%22M234.0 130 A51.00000000000001 58.650000000000006 0 0 1 336.0 130 Z%22/%3E%3Crect x=%22283.8%22 y=%2257.349999999999994%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22204%22 y=%22170.6%22 width=%22162%22 height=%2229.4%22/%3E%3C/g%3E%3Cg fill=%22%23292C66%22 fill-opacity=%220.36%22%3E%3Crect x=%22400%22 y=%22100%22 width=%2210%22 height=%22100%22/%3E%3Crect x=%22397.0%22 y=%22122.0%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22398.5,100 411.5,100 405.0,75.8%22/%3E%3Ccircle cx=%22405.0%22 cy=%2273.6%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%23292C66%22 fill-opacity=%220.36%22%3E%3Crect x=%22420%22 y=%22155%22 width=%2270%22 height=%2245%22/%3E%3Cpath d=%22M431.2 155 A23.8 27.369999999999997 0 0 1 478.8 155 Z%22/%3E%3Crect x=%22453.8%22 y=%22113.63%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22414%22 y=%22181.1%22 width=%2282%22 height=%2218.9%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22500%22 height=%2281%22 fill=%22%23292C66%22 fill-opacity=%220.10%22/%3E%3C/svg%3E"); background-position: 40% 0; }
+@media (min-width: 768px) { #pk-sky { --pk-h: 320px; } }
+/* body's own background (v270) is opaque and painted ABOVE any z-index:-1 child, which hid both this layer and the v270 fixed glow.
+   isolation makes body its own stacking context, so z-index:-1 children now paint above body's background but below the page content. Light mode only. */
+html:not([data-theme="dark"]) body.islamic-pattern-bg { isolation: isolate; }
+/* ...which would also reveal the v270 fixed glow+grain (never visible until now) and turn the page grey-blue; keep today's look: it stays hidden in light mode. */
+html:not([data-theme="dark"]) body.islamic-pattern-bg::before { display: none; }
+html[data-theme="dark"] #pk-sky, body.rm-on #pk-sky { display: none; }
+@media print { #pk-sky { display: none; } }
+
+/* ============================================================================
+   v273 — Skyline Depth in DARK MODE
+   v272 hid #pk-sky in dark mode, and its blue/indigo silhouettes (made for the pale light background) would be invisible on #061410 anyway.
+   Here: show the same three layers in dark with their own palette (aqua · blue · gold) + a soft gold/aqua horizon glow.
+   Markup, JS and the light-mode look are untouched. Reader mode and print still hide it.
+   Revert = delete this block.
+   ============================================================================ */
+html[data-theme="dark"] #pk-sky { display: block; }
+html[data-theme="dark"] body.rm-on #pk-sky { display: none; }
+@media print { html[data-theme="dark"] #pk-sky { display: none; } }
+html[data-theme="dark"] #pk-sky::before {
+    background:
+        radial-gradient(70% 90% at 50% 100%, rgba(230,195,106,.20), transparent 70%),
+        radial-gradient(50% 70% at 20% 100%, rgba(112,214,197,.12), transparent 70%);
+}
+html[data-theme="dark"] #pk-sky .pk-l1 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22280%22 viewBox=%220 0 360 280%22%3E%3Cg fill=%22%2370D6C5%22 fill-opacity=%220.22%22%3E%3Crect x=%2230%22 y=%2250%22 width=%229%22 height=%22150%22/%3E%3Crect x=%2227.3%22 y=%2283.0%22 width=%2214.4%22 height=%223.15%22/%3E%3Cpolygon points=%2228.65,50 40.35,50 34.5,28.22%22/%3E%3Ccircle cx=%2234.5%22 cy=%2226.24%22 r=%221.6199999999999999%22/%3E%3C/g%3E%3Cg fill=%22%2370D6C5%22 fill-opacity=%220.22%22%3E%3Crect x=%2270%22 y=%22130%22 width=%2290%22 height=%2270%22/%3E%3Cpath d=%22M84.4 130 A30.6 35.19 0 0 1 145.6 130 Z%22/%3E%3Crect x=%22113.8%22 y=%2280.81%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%2264%22 y=%22170.6%22 width=%22102%22 height=%2229.4%22/%3E%3C/g%3E%3Cg fill=%22%2370D6C5%22 fill-opacity=%220.22%22%3E%3Crect x=%22230%22 y=%2230%22 width=%229%22 height=%22170%22/%3E%3Crect x=%22227.3%22 y=%2267.4%22 width=%2214.4%22 height=%223.15%22/%3E%3Cpolygon points=%22228.65,30 240.35,30 234.5,8.219999999999999%22/%3E%3Ccircle cx=%22234.5%22 cy=%226.239999999999998%22 r=%221.6199999999999999%22/%3E%3C/g%3E%3Cg fill=%22%2370D6C5%22 fill-opacity=%220.22%22%3E%3Crect x=%22262%22 y=%22140%22 width=%2286%22 height=%2260%22/%3E%3Cpath d=%22M275.76 140 A29.240000000000002 33.626 0 0 1 334.24 140 Z%22/%3E%3Crect x=%22303.8%22 y=%2292.374%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22256%22 y=%22174.8%22 width=%2298%22 height=%2225.2%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22360%22 height=%2281%22 fill=%22%2370D6C5%22 fill-opacity=%220.07%22/%3E%3C/svg%3E"); }
+html[data-theme="dark"] #pk-sky .pk-l2 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22420%22 height=%22280%22 viewBox=%220 0 420 280%22%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.26%22%3E%3Crect x=%2214%22 y=%22120%22 width=%22110%22 height=%2280%22/%3E%3Cpath d=%22M31.599999999999994 120 A37.400000000000006 43.010000000000005 0 0 1 106.4 120 Z%22/%3E%3Crect x=%2267.8%22 y=%2262.989999999999995%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%228%22 y=%22166.4%22 width=%22122%22 height=%2233.6%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.26%22%3E%3Crect x=%22150%22 y=%2210%22 width=%2210%22 height=%22190%22/%3E%3Crect x=%22147.0%22 y=%2251.79999999999998%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22148.5,10 161.5,10 155.0,-14.200000000000003%22/%3E%3Ccircle cx=%22155.0%22 cy=%22-16.4%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.26%22%3E%3Crect x=%22190%22 y=%22145%22 width=%2280%22 height=%2255%22/%3E%3Cpath d=%22M202.8 145 A27.200000000000003 31.28 0 0 1 257.2 145 Z%22/%3E%3Crect x=%22228.8%22 y=%2299.72%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22184%22 y=%22176.9%22 width=%2292%22 height=%2223.099999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.26%22%3E%3Crect x=%22320%22 y=%2225%22 width=%2210%22 height=%22175%22/%3E%3Crect x=%22317.0%22 y=%2263.5%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22318.5,25 331.5,25 325.0,0.7999999999999972%22/%3E%3Ccircle cx=%22325.0%22 cy=%22-1.3999999999999986%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%234E9CE8%22 fill-opacity=%220.26%22%3E%3Crect x=%22345%22 y=%22150%22 width=%2260%22 height=%2250%22/%3E%3Cpath d=%22M354.6 150 A20.400000000000002 23.46 0 0 1 395.4 150 Z%22/%3E%3Crect x=%22373.8%22 y=%22112.53999999999999%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22339%22 y=%22179.0%22 width=%2272%22 height=%2221.0%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22420%22 height=%2281%22 fill=%22%234E9CE8%22 fill-opacity=%220.08%22/%3E%3C/svg%3E"); }
+html[data-theme="dark"] #pk-sky .pk-l3 { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22280%22 viewBox=%220 0 500 280%22%3E%3Cg fill=%22%23E6C36A%22 fill-opacity=%220.30%22%3E%3Crect x=%2216%22 y=%22140%22 width=%22120%22 height=%2260%22/%3E%3Cpath d=%22M35.199999999999996 140 A40.800000000000004 46.92 0 0 1 116.80000000000001 140 Z%22/%3E%3Crect x=%2274.8%22 y=%2279.08%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%2210%22 y=%22174.8%22 width=%22132%22 height=%2225.2%22/%3E%3C/g%3E%3Cg fill=%22%23E6C36A%22 fill-opacity=%220.30%22%3E%3Crect x=%22160%22 y=%2280%22 width=%2211%22 height=%22120%22/%3E%3Crect x=%22156.7%22 y=%22106.39999999999999%22 width=%2217.6%22 height=%223.8499999999999996%22/%3E%3Cpolygon points=%22158.35,80 172.65,80 165.5,53.379999999999995%22/%3E%3Ccircle cx=%22165.5%22 cy=%2250.959999999999994%22 r=%221.98%22/%3E%3C/g%3E%3Cg fill=%22%23E6C36A%22 fill-opacity=%220.30%22%3E%3Crect x=%22210%22 y=%22130%22 width=%22150%22 height=%2270%22/%3E%3Cpath d=%22M234.0 130 A51.00000000000001 58.650000000000006 0 0 1 336.0 130 Z%22/%3E%3Crect x=%22283.8%22 y=%2257.349999999999994%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22204%22 y=%22170.6%22 width=%22162%22 height=%2229.4%22/%3E%3C/g%3E%3Cg fill=%22%23E6C36A%22 fill-opacity=%220.30%22%3E%3Crect x=%22400%22 y=%22100%22 width=%2210%22 height=%22100%22/%3E%3Crect x=%22397.0%22 y=%22122.0%22 width=%2216.0%22 height=%223.5%22/%3E%3Cpolygon points=%22398.5,100 411.5,100 405.0,75.8%22/%3E%3Ccircle cx=%22405.0%22 cy=%2273.6%22 r=%221.7999999999999998%22/%3E%3C/g%3E%3Cg fill=%22%23E6C36A%22 fill-opacity=%220.30%22%3E%3Crect x=%22420%22 y=%22155%22 width=%2270%22 height=%2245%22/%3E%3Cpath d=%22M431.2 155 A23.8 27.369999999999997 0 0 1 478.8 155 Z%22/%3E%3Crect x=%22453.8%22 y=%22113.63%22 width=%222.4%22 height=%2214%22/%3E%3Crect x=%22414%22 y=%22181.1%22 width=%2282%22 height=%2218.9%22/%3E%3C/g%3E%3Crect x=%220%22 y=%22199%22 width=%22500%22 height=%2281%22 fill=%22%23E6C36A%22 fill-opacity=%220.09%22/%3E%3C/svg%3E"); }
+
+/* ============================================================================
+   v274 — FOOTER (desktop ≥1024px): wider "Quick Links" column, 4 link columns
+   The three footer columns were equal width, so the 15 links in 2 columns (8 rows) made the footer ~446px tall while the brand and
+   contact columns are only ~174px / ~114px: a lot of empty space under them. Giving the links column more width lets it hold 4 columns
+   (4 rows, ~238px) without any label wrapping. Phones/tablets (<1024px) are unchanged.
+   Scoped to footer.footer-luxury; markup (script-2-ui.js) and the links added by footer-seo-links.js / apk-app.js are untouched.
+   Revert = delete this block.
+   ============================================================================ */
+@media (min-width: 1024px) {
+    footer.footer-luxury .grid.md\:grid-cols-3 { grid-template-columns: 1fr 1.9fr 1fr; }
+    footer.footer-luxury .grid.md\:grid-cols-3 .grid.grid-cols-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ============================================================================
+   v275 — FOOTER PREMIUM POLISH (CSS only)
+   The footer was still the old emerald slab while the rest of the app moved to the Peacock palette (v268–v273). This block re-tints it
+   (ink-teal → deep indigo, soft aqua/indigo glows), gives headings and the bottom rule gold ornaments, lifts link/contact contrast,
+   unifies the social + contact tiles (glass tile, gold ring) and restyles the moon-sighting row and install button to match.
+   Scoped to footer.footer-luxury; markup (script-2-ui.js), classes, IDs, data-actions and the links added by footer-seo-links.js /
+   apk-app.js are untouched. The footer is dark in BOTH themes, so no theme variants. Inline colours (set by renderFooter and its
+   onmouseover handlers) are overridden with !important. Revert = delete this block.
+   ============================================================================ */
+footer.footer-luxury {
+    background:
+        radial-gradient(60% 55% at 0% 100%, rgba(112,214,197,.10), transparent 70%),
+        radial-gradient(55% 50% at 100% 25%, rgba(77,82,180,.24), transparent 70%),
+        linear-gradient(180deg, #071b22 0%, #08151f 45%, #0b1233 100%);
+}
+footer.footer-luxury::before {
+    background: linear-gradient(90deg, transparent, rgba(230,195,106,.65), transparent);
+    box-shadow: 0 0 26px 2px rgba(230,195,106,.16);
+}
+/* mosque silhouette: a little more present, tinted toward teal */
+footer.footer-luxury div:has(> svg[viewBox="0 0 1200 130"]) { opacity: .34 !important; filter: hue-rotate(16deg) saturate(.9); }
+
+/* brand column */
+footer.footer-luxury h2 + p { color: #70D6C5 !important; }
+footer.footer-luxury p.leading-relaxed { color: rgba(255,255,255,.68) !important; }
+footer.footer-luxury .flex.gap-2.flex-wrap > a {
+    background: rgba(255,255,255,.05) !important; border: 1px solid rgba(230,195,106,.28) !important; color: rgba(255,255,255,.88) !important;
+}
+footer.footer-luxury .flex.gap-2.flex-wrap > a:hover { border-color: #E6C36A !important; color: #E6C36A !important; }
+
+/* column headings: soft gold, longer ornament dash + a fading hairline */
+footer.footer-luxury h3 { color: #F1DFA6 !important; letter-spacing: .01em; }
+footer.footer-luxury h3 > span[aria-hidden="true"] { width: 26px !important; background: linear-gradient(90deg, #E6C36A, rgba(230,195,106,.15)) !important; }
+footer.footer-luxury h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(230,195,106,.30), transparent); }
+
+/* quick links: readable at rest, gold on hover, aqua arrows */
+footer.footer-luxury .grid.grid-cols-2 > button,
+footer.footer-luxury .grid.grid-cols-2 > a { color: rgba(255,255,255,.78) !important; transition: color .2s ease, transform .2s ease; }
+footer.footer-luxury .grid.grid-cols-2 > button:hover,
+footer.footer-luxury .grid.grid-cols-2 > a:hover { color: #E6C36A !important; }
+footer.footer-luxury .grid.grid-cols-2 > * svg { color: rgba(112,214,197,.85) !important; transition: color .2s ease; }
+footer.footer-luxury .grid.grid-cols-2 > *:hover svg { color: #E6C36A !important; }
+
+/* contact rows */
+footer.footer-luxury a[href^="mailto:"], footer.footer-luxury a[href^="tel:"] { color: rgba(255,255,255,.8) !important; }
+footer.footer-luxury a[href^="mailto:"]:hover, footer.footer-luxury a[href^="tel:"]:hover { color: #E6C36A !important; }
+footer.footer-luxury a[href^="mailto:"] > span[aria-hidden="true"], footer.footer-luxury a[href^="tel:"] > span[aria-hidden="true"] {
+    background: rgba(255,255,255,.05) !important; border: 1px solid rgba(230,195,106,.30) !important; color: #E6C36A !important;
+}
+
+/* bottom bar: gold hairline with a centre diamond instead of the faint white rule */
+footer.footer-luxury .max-w-7xl > div:last-child { position: relative; border-top-color: transparent !important; }
+footer.footer-luxury .max-w-7xl > div:last-child::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(230,195,106,.5) 50%, transparent);
+}
+footer.footer-luxury .max-w-7xl > div:last-child::after {
+    content: ""; position: absolute; left: 50%; top: -3px; width: 7px; height: 7px; background: #E6C36A;
+    transform: translateX(-50%) rotate(45deg); box-shadow: 0 0 10px rgba(230,195,106,.7);
+}
+footer.footer-luxury p.arabic-text { filter: drop-shadow(0 0 12px rgba(230,195,106,.25)); }
+
+/* moon-sighting row + install button */
+footer.footer-luxury .hj-adj { background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border: 1px solid rgba(230,195,106,.18); }
+footer.footer-luxury .hj-adj-btn { border-color: rgba(230,195,106,.28); }
+footer.footer-luxury .hj-adj-btn[aria-pressed="true"] { background: linear-gradient(135deg, #4D52B4, #2F78C4) !important; border-color: rgba(230,195,106,.65) !important; color: #fff !important; }
+footer.footer-luxury button[onclick*="triggerPWAInstall"] {
+    background: rgba(230,195,106,.10) !important; color: #E6C36A !important; border: 1px solid rgba(230,195,106,.35) !important;
+}
